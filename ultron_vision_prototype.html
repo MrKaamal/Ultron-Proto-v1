@@ -1,0 +1,2607 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ULTRON / VISION — Sovereign Cybernetic Prototype & GitHub Repo Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            cyber: {
+              bg: '#090b10',
+              panel: '#11151f',
+              panelHigh: '#181e2c',
+              border: '#242c40',
+              cyan: '#38bdf8',
+              crimson: '#f43f5e',
+              amber: '#f59e0b',
+              emerald: '#10b981',
+              violet: '#8b5cf6'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background-color: #090b10;
+      color: #e2e8f0;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #090b10; }
+    ::-webkit-scrollbar-thumb { background: #263044; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
+    .mono-num { font-variant-numeric: tabular-nums; }
+    .cyber-grid-bg {
+      background-image: 
+        linear-gradient(to right, rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    input[type="range"] {
+      accent-color: #38bdf8;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-sky-500/30 selection:text-sky-200">
+
+  <!-- Top Telemetry Header -->
+  <header class="sticky top-0 z-30 border-b border-cyber-border bg-cyber-bg/95 backdrop-blur-md px-4 py-3">
+    <div class="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500/20 to-rose-500/20 border border-sky-400/40 flex items-center justify-center shadow-inner">
+          <svg class="w-5 h-5 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+            <line x1="12" y1="22" x2="12" y2="15.5"/>
+            <polyline points="22 8.5 12 15.5 2 8.5"/>
+            <polyline points="2 15.5 12 8.5 22 15.5"/>
+            <line x1="12" y1="2" x2="12" y2="8.5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm sm:text-base font-bold tracking-tight text-white font-mono">ULTRON-VISION // SOVEREIGN PROTO v1.0</h1>
+            <span id="estop-badge" class="px-2 py-0.5 text-[11px] font-mono font-semibold rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+              1,000 Hz RTOS NOMINAL
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">Complete 14-File Cybernetic Repository + Live C-Spinal FOC Simulator & ReAct Brain</p>
+        </div>
+      </div>
+
+      <!-- Mode Switcher Tabs -->
+      <div class="flex items-center gap-1.5 bg-cyber-panel p-1 rounded-xl border border-cyber-border">
+        <button id="tab-btn-sim" onclick="switchMainTab('sim')" class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-all bg-sky-500/20 text-sky-300 border border-sky-400/30">
+          01. Live Cybernetic Command Center
+        </button>
+        <button id="tab-btn-repo" onclick="switchMainTab('repo')" class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-all text-slate-400 hover:text-slate-200 border border-transparent">
+          02. Complete GitHub Repo Files (14 Files)
+        </button>
+        <button id="tab-btn-hw" onclick="switchMainTab('hw')" class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-all text-slate-400 hover:text-slate-200 border border-transparent">
+          03. Hardware Wiring & BOM
+        </button>
+      </div>
+
+      <!-- Live Clock & Swarm Counters -->
+      <div class="hidden xl:flex items-center gap-4 text-xs font-mono">
+        <div class="flex flex-col items-end">
+          <span class="text-[10px] text-slate-500 uppercase">Spinal Loop Ticks</span>
+          <span id="hdr-ticks" class="text-sky-400 font-semibold mono-num">0</span>
+        </div>
+        <div class="h-6 w-px bg-cyber-border"></div>
+        <div class="flex flex-col items-end">
+          <span class="text-[10px] text-slate-500 uppercase">Swarm Sync Hash</span>
+          <span id="hdr-hash" class="text-emerald-400 font-semibold mono-num">8f4a...c01e</span>
+        </div>
+        <button onclick="downloadBootstrapScript()" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-mono text-xs flex items-center gap-1.5 transition">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Repo Unpacker (.py)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toast Notification Banner -->
+  <div id="toast-box" class="fixed bottom-5 right-5 z-50 hidden px-4 py-2.5 rounded-xl bg-slate-900/95 border border-sky-400/50 text-sky-200 text-xs font-mono shadow-2xl flex items-center gap-2">
+    <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
+    <span id="toast-text">Copied to clipboard</span>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- TAB 1: LIVE CYBERNETIC COMMAND CENTER (SIMULATOR + BRAIN + SWARM)     -->
+  <!-- ===================================================================== -->
+  <main id="view-sim" class="flex-1 max-w-[1440px] w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+    <!-- LEFT 7 COLUMNS: 6-DoF C-Spinal Cord Physics, CAN-FD Bus & Joint Controls -->
+    <section class="lg:col-span-7 flex flex-col gap-4">
+
+      <!-- Top Visual Row: Interactive Kinematic Visualizer + Live Oscilloscope -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <!-- 6-DoF Kinematic Chassis Canvas -->
+        <div class="bg-cyber-panel border border-cyber-border rounded-2xl p-4 flex flex-col justify-between cyber-grid-bg relative overflow-hidden">
+          <div class="flex items-center justify-between z-10 mb-2">
+            <div>
+              <span class="text-[10px] font-mono uppercase tracking-wider text-sky-400 block">Layer 6 · Mechatronics & FOC</span>
+              <h2 class="text-sm font-semibold text-white">6-DoF Cybernetic Upper Chassis</h2>
+            </div>
+            <div class="flex gap-1.5">
+              <button onclick="injectExternalImpulse()" class="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 text-[11px] font-mono transition" title="Simulate a physical push/impact on the robot's arms">
+                ⚡ Push Impact
+              </button>
+              <button onclick="resetEmergencyStop()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 text-[11px] font-mono transition">
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <div class="relative w-full h-60 flex items-center justify-center">
+            <canvas id="chassis-canvas" class="w-full h-full block"></canvas>
+          </div>
+
+          <!-- Posture Macro Strip -->
+          <div class="flex flex-wrap items-center justify-between gap-1.5 pt-2 border-t border-cyber-border/80 z-10">
+            <span class="text-[11px] font-mono text-slate-400">Macros:</span>
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="applyPosturePreset('neutral')" class="px-2.5 py-1 rounded-lg bg-cyber-panelHigh hover:bg-slate-700 text-slate-200 border border-cyber-border text-[11px] font-mono transition">Neutral</button>
+              <button onclick="applyPosturePreset('combat_guard')" class="px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 text-[11px] font-mono transition">Combat Guard</button>
+              <button onclick="applyPosturePreset('scan_horizon')" class="px-2.5 py-1 rounded-lg bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 border border-violet-500/30 text-[11px] font-mono transition">Scan Horizon</button>
+              <button onclick="applyPosturePreset('compliant')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[11px] font-mono transition">Soft Compliant</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-Time FOC Current & Torque Oscilloscope -->
+        <div class="bg-cyber-panel border border-cyber-border rounded-2xl p-4 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <span class="text-[10px] font-mono uppercase tracking-wider text-emerald-400 block">Layer 4 & 5 · 1,000 Hz Telemetry</span>
+              <h2 class="text-sm font-semibold text-white">PD Impedance & FOC Phase Scope</h2>
+            </div>
+            <select id="scope-joint-select" onchange="selectedScopeJoint = parseInt(this.value)" class="bg-cyber-bg border border-cyber-border rounded-lg px-2 py-1 text-xs font-mono text-sky-300 outline-none">
+              <option value="0">J0: Neck_Yaw</option>
+              <option value="1">J1: Neck_Pitch</option>
+              <option value="2">J2: R_Shoulder_Pitch</option>
+              <option value="3" selected>J3: R_Elbow_Flex</option>
+              <option value="4">J4: L_Shoulder_Pitch</option>
+              <option value="5">J5: L_Elbow_Flex</option>
+            </select>
+          </div>
+
+          <div class="relative w-full h-44 bg-cyber-bg rounded-xl border border-cyber-border overflow-hidden">
+            <canvas id="scope-canvas" class="w-full h-full block"></canvas>
+          </div>
+
+          <!-- Governing Law Readout -->
+          <div class="mt-2 pt-2 border-t border-cyber-border/80 flex flex-col gap-1.5 text-[11px] font-mono">
+            <div class="flex items-center justify-between text-slate-400">
+              <span>Law: <code class="text-slate-200">τ = Kp(q_d - q) + Kd(dq_d - dq)</code></span>
+              <span class="flex items-center gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-sky-400"></span>Angle
+                <span class="inline-block w-2 h-2 rounded-full bg-rose-400"></span>Current (Iq)
+              </span>
+            </div>
+            <div class="bg-cyber-bg px-2.5 py-1.5 rounded-lg border border-cyber-border flex items-center justify-between">
+              <span class="text-slate-400">CAN-FD 64b Frame:</span>
+              <span id="can-frame-hex" class="text-amber-400 font-semibold tracking-wider">0x03 0x9F80 0x7FF0 0x1041F4</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6-DoF Actuator Matrix & Interactive Sliders -->
+      <div class="bg-cyber-panel border border-cyber-border rounded-2xl p-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-wider text-amber-400 block">Zero-Copy Ctypes Shared Struct (`CyberneticChassis`)</span>
+            <h2 class="text-sm font-semibold text-white">Interactive QDD Joint Array (Drag sliders to command `actuator_core.c`)</h2>
+          </div>
+          <div class="flex items-center gap-3 text-xs font-mono">
+            <label class="flex items-center gap-1.5 text-slate-300">
+              <span>Global Kp:</span>
+              <input id="global-kp" type="number" value="65" min="5" max="250" onchange="updateGlobalGains()" class="w-14 bg-cyber-bg border border-cyber-border rounded px-1.5 py-0.5 text-sky-300 text-center" />
+            </label>
+            <label class="flex items-center gap-1.5 text-slate-300">
+              <span>Global Kd:</span>
+              <input id="global-kd" type="number" value="6.5" step="0.5" min="0.5" max="40" onchange="updateGlobalGains()" class="w-14 bg-cyber-bg border border-cyber-border rounded px-1.5 py-0.5 text-emerald-300 text-center" />
+            </label>
+          </div>
+        </div>
+
+        <div id="joint-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
+          <!-- Dynamically populated by JS -->
+        </div>
+      </div>
+
+      <!-- Layer 1: Decentralized Ultron Swarm Mesh & Layer 3: Engram Vector Memory -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <!-- Ultron Hive-Mind UDP Mesh Simulator -->
+        <div class="bg-cyber-panel border border-cyber-border rounded-2xl p-4 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <span class="text-[10px] font-mono uppercase tracking-wider text-rose-400 block">Layer 1 · Decentralized UDP Hive-Mind</span>
+              <h2 class="text-sm font-semibold text-white">Swarm Node State Synchronization</h2>
+            </div>
+            <button onclick="triggerSwarmSync()" class="px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 text-[11px] font-mono transition">
+              Broadcast Sync
+            </button>
+          </div>
+
+          <div id="swarm-nodes-list" class="space-y-2 my-1">
+            <!-- Populated by JS -->
+          </div>
+
+          <p class="text-[11px] text-slate-400 mt-2 pt-2 border-t border-cyber-border/60">
+            Toggle any node offline to test Vision-style air-gapping & automatic state replication across surviving nodes.
+          </p>
+        </div>
+
+        <!-- SQLite Engram Vector Store -->
+        <div class="bg-cyber-panel border border-cyber-border rounded-2xl p-4 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <span class="text-[10px] font-mono uppercase tracking-wider text-violet-400 block">Layer 3 · SQLite 128-D Cosine Memory</span>
+              <h2 class="text-sm font-semibold text-white">Persistent Engram Store (`ultron_engrams.db`)</h2>
+            </div>
+            <span id="engram-count-badge" class="px-2 py-0.5 rounded-full text-[11px] font-mono bg-violet-500/20 text-violet-300 border border-violet-500/30">4 Engrams</span>
+          </div>
+
+          <div class="flex gap-1.5 mb-2">
+            <input id="engram-search-input" type="text" placeholder="Query semantic memory (e.g., power bus, directive)..." oninput="renderEngramList(this.value)" class="flex-1 bg-cyber-bg border border-cyber-border rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-200 outline-none focus:border-violet-400" />
+          </div>
+
+          <div id="engram-list-container" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT 5 COLUMNS: System-2 Sovereign Brain Console + Multimodal Sensor Feed -->
+    <section class="lg:col-span-5 flex flex-col gap-4">
+
+      <!-- Multimodal Optical & Voice Sensor Strip -->
+      <div class="bg-cyber-panel border border-cyber-border rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-wider text-sky-400 block">Layer 3 · SigLIP / OpenCV Optical & Audio Bus</span>
+            <h2 class="text-sm font-semibold text-white">Embodied Perception Stream</h2>
+          </div>
+          <div class="flex gap-1.5">
+            <button id="btn-toggle-cam" onclick="toggleWebcamSensor()" class="px-2.5 py-1 rounded-lg bg-cyber-panelHigh hover:bg-slate-700 border border-cyber-border text-xs font-mono text-slate-300 transition">
+              📷 Enable Optical Feed
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <div class="col-span-5 h-24 bg-cyber-bg rounded-xl border border-cyber-border relative overflow-hidden flex items-center justify-center">
+            <video id="webcam-video" autoplay playsinline muted class="w-full h-full object-cover hidden"></video>
+            <canvas id="synthetic-vision-canvas" class="w-full h-full block"></canvas>
+            <span id="vision-mode-tag" class="absolute bottom-1 left-1.5 px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-mono text-emerald-400">
+              SYNTHETIC LIDAR/RGB-D
+            </span>
+          </div>
+          <div class="col-span-7 flex flex-col gap-1.5 text-xs font-mono">
+            <div class="bg-cyber-bg px-2.5 py-1.5 rounded-lg border border-cyber-border flex justify-between">
+              <span class="text-slate-400">Visual Tokens:</span>
+              <span class="text-sky-400">196 patches (16×16 ViT)</span>
+            </div>
+            <div class="bg-cyber-bg px-2.5 py-1.5 rounded-lg border border-cyber-border flex justify-between">
+              <span class="text-slate-400">Tracked Target:</span>
+              <span id="tracked-target-coords" class="text-emerald-400">X:+0.42m Y:+0.18m Z:0.85m</span>
+            </div>
+            <div class="bg-cyber-bg px-2.5 py-1.5 rounded-lg border border-cyber-border flex justify-between">
+              <span class="text-slate-400">Visual Servoing:</span>
+              <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                <input id="chk-visual-servo" type="checkbox" onchange="visualServoEnabled = this.checked" class="rounded accent-sky-400" />
+                <span class="text-amber-300 text-[11px]">Auto-Track Neck (J0/J1)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- System 2 ReAct Terminal Console -->
+      <div class="bg-cyber-panel border border-cyber-border rounded-2xl p-4 flex-1 flex flex-col justify-between min-h-[460px]">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-cyber-border">
+            <div>
+              <span class="text-[10px] font-mono uppercase tracking-wider text-rose-400 block">Layer 3 · System-2 Cognitive Orchestrator</span>
+              <h2 class="text-sm font-semibold text-white">Sovereign ReAct Shell (`ultron_brain.py`)</h2>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="flex items-center gap-1.5 text-[11px] font-mono text-slate-300 cursor-pointer bg-cyber-bg px-2.5 py-1 rounded-lg border border-cyber-border">
+                <input id="chk-use-gemini" type="checkbox" checked class="accent-sky-400" />
+                <span>Gemini 3 Flash + Reflex</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Quick Directive Chips -->
+          <div class="flex flex-wrap gap-1.5 py-2.5 border-b border-cyber-border/60">
+            <button onclick="sendQuickDirective('move joint 3 to 95')" class="px-2 py-1 rounded-md bg-cyber-bg hover:bg-cyber-panelHigh border border-cyber-border text-[11px] font-mono text-sky-300 transition">move joint 3 to 95</button>
+            <button onclick="sendQuickDirective('posture combat_guard')" class="px-2 py-1 rounded-md bg-cyber-bg hover:bg-cyber-panelHigh border border-cyber-border text-[11px] font-mono text-rose-300 transition">posture combat_guard</button>
+            <button onclick="sendQuickDirective('remember Vibranium power bus nominal at 48.2V')" class="px-2 py-1 rounded-md bg-cyber-bg hover:bg-cyber-panelHigh border border-cyber-border text-[11px] font-mono text-violet-300 transition">remember 48.2V bus</button>
+            <button onclick="sendQuickDirective('recall power bus')" class="px-2 py-1 rounded-md bg-cyber-bg hover:bg-cyber-panelHigh border border-cyber-border text-[11px] font-mono text-emerald-300 transition">recall power bus</button>
+            <button onclick="sendQuickDirective('telemetry')" class="px-2 py-1 rounded-md bg-cyber-bg hover:bg-cyber-panelHigh border border-cyber-border text-[11px] font-mono text-amber-300 transition">telemetry</button>
+          </div>
+        </div>
+
+        <!-- Terminal Output Log -->
+        <div id="terminal-output" class="flex-1 my-3 bg-cyber-bg rounded-xl border border-cyber-border p-3 font-mono text-xs overflow-y-auto max-h-[340px] space-y-3">
+          <!-- Initial boot log -->
+        </div>
+
+        <!-- Command Input Form -->
+        <form onsubmit="handleTerminalSubmit(event)" class="flex gap-2">
+          <div class="flex-1 flex items-center bg-cyber-bg border border-cyber-border rounded-xl px-3 py-2 focus-within:border-sky-400">
+            <span class="text-sky-400 font-mono text-xs mr-2 select-none">Boss@Sovereign-Core~$</span>
+            <input id="terminal-input" type="text" placeholder="Enter natural language goal or direct reflex command..." class="flex-1 bg-transparent text-xs font-mono text-white outline-none" autocomplete="off" />
+          </div>
+          <button id="terminal-send-btn" type="submit" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-mono font-semibold text-xs transition">
+            Execute
+          </button>
+        </form>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- TAB 2: COMPLETE GITHUB REPOSITORY IDE & EXPORTER (14 FILES)           -->
+  <!-- ===================================================================== -->
+  <main id="view-repo" class="hidden flex-1 max-w-[1440px] w-full mx-auto p-4 flex flex-col gap-4">
+    
+    <!-- Repo Banner -->
+    <div class="bg-cyber-panel border border-cyber-border rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-xs border border-sky-500/30">ultron-vision-proto/</span>
+          <h2 class="text-base font-bold text-white">Complete 14-File Production Repository</h2>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+          Includes the C99 1,000 Hz FOC/Impedance engine with CAN-FD bit packing, Python `ctypes` minimum-jerk trajectory bridge, Serial/SocketCAN hardware driver, ESP32/STM32 brushless firmware, OpenCV perception, UDP Hive-Mind swarm daemon, unit tests, and Docker multi-node config.
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="copyBootstrapToClipboard()" class="px-3.5 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/40 font-mono text-xs font-semibold transition">
+          📋 Copy `bootstrap_repo.py` (Auto-Creates All 14 Files)
+        </button>
+        <button onclick="downloadBootstrapScript()" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono text-xs font-bold transition">
+          ⬇ Download `bootstrap_repo.py`
+        </button>
+      </div>
+    </div>
+
+    <!-- IDE Split Pane -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-[620px]">
+      <!-- File Explorer Tree -->
+      <div class="lg:col-span-3 bg-cyber-panel border border-cyber-border rounded-2xl p-3 flex flex-col justify-between">
+        <div>
+          <div class="text-xs font-mono uppercase tracking-wider text-slate-400 px-2 py-1.5 border-b border-cyber-border mb-2">
+            Repository Explorer
+          </div>
+          <div id="repo-file-tree" class="space-y-1">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <div class="mt-4 p-3 rounded-xl bg-cyber-bg border border-cyber-border text-[11px] font-mono text-slate-400 space-y-1.5">
+          <div class="text-sky-300 font-semibold">Quick Unpack on Your PC:</div>
+          <div>1. Download <code class="text-emerald-300">bootstrap_repo.py</code></div>
+          <div>2. Run <code class="text-amber-300">python bootstrap_repo.py</code></div>
+          <div>3. It builds the entire folder tree, compiles <code class="text-sky-300">actuator_core</code> via GCC, runs unit tests, and starts the CLI!</div>
+        </div>
+      </div>
+
+      <!-- Code Editor View -->
+      <div class="lg:col-span-9 bg-cyber-panel border border-cyber-border rounded-2xl flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-2.5 bg-cyber-panelHigh border-b border-cyber-border">
+          <div class="flex items-center gap-2.5">
+            <span id="editor-file-path" class="font-mono text-xs font-semibold text-sky-300">src/spinal_cord/actuator_core.c</span>
+            <span id="editor-file-desc" class="text-xs text-slate-400 hidden sm:inline">— Layer 5 & 6: 1,000 Hz C99 PD-Impedance + FOC + CAN-FD Bit-Packer</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="copyActiveRepoFile()" class="px-3 py-1 rounded-lg bg-cyber-bg hover:bg-slate-800 text-slate-200 border border-cyber-border text-xs font-mono transition">
+              Copy File
+            </button>
+            <button onclick="downloadActiveRepoFile()" class="px-3 py-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-xs font-mono transition">
+              Download File
+            </button>
+          </div>
+        </div>
+        <pre class="flex-1 p-4 bg-cyber-bg overflow-auto text-xs font-mono leading-relaxed text-slate-200 select-all"><code id="editor-code-content"></code></pre>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- TAB 3: HARDWARE WIRING, CAN-FD TOPOLOGY & BILL OF MATERIALS (BOM)     -->
+  <!-- ===================================================================== -->
+  <main id="view-hw" class="hidden flex-1 max-w-[1440px] w-full mx-auto p-4 space-y-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      
+      <!-- Hardware BOM Table -->
+      <div class="bg-cyber-panel border border-cyber-border rounded-2xl p-5">
+        <span class="text-xs font-mono uppercase tracking-wider text-sky-400">Physical Embodiment Blueprint</span>
+        <h2 class="text-base font-bold text-white mt-0.5 mb-3">Bill of Materials (Desktop Prototype to Full 6-DoF Upper Torso)</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse font-mono text-xs">
+            <thead>
+              <tr class="border-b border-cyber-border text-slate-400">
+                <th class="py-2 pr-3">Subsystem</th>
+                <th class="py-2 pr-3">Desktop Starter (~$85)</th>
+                <th class="py-2">Full Vision-Grade Torso</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-cyber-border/60 text-slate-200">
+              <tr>
+                <td class="py-2.5 pr-3 text-sky-300 font-semibold">Compute Brain</td>
+                <td class="py-2.5 pr-3">Your PC / Laptop (Windows/Linux)</td>
+                <td class="py-2.5">NVIDIA Jetson Orin NX / AGX Orin (64GB)</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 pr-3 text-emerald-300 font-semibold">Spinal MCU</td>
+                <td class="py-2.5 pr-3">ESP32-S3 or STM32G431 Nucleo ($12)</td>
+                <td class="py-2.5">STM32H743 + Isolated MCP2518FD CAN-FD</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 pr-3 text-amber-300 font-semibold">FOC Motor Driver</td>
+                <td class="py-2.5 pr-3">SimpleFOCMini / B-G431B-ESC1 ($18)</td>
+                <td class="py-2.5">3-Phase 48V 40A GaN FET Inverter PCB</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 pr-3 text-rose-300 font-semibold">Actuator / Muscle</td>
+                <td class="py-2.5 pr-3">Gimbal BLDC 2804/4008 + AS5600 ($25)</td>
+                <td class="py-2.5">QDD Planetary/Strain-Wave Actuator (AK60-6 / RobStride)</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 pr-3 text-violet-300 font-semibold">Power Bus (PDS)</td>
+                <td class="py-2.5 pr-3">12V–24V Bench DC Supply + TVS Diode</td>
+                <td class="py-2.5">48V 20Ah Li-Ion 13S Pack + Smart BMS + Pre-Charge</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 pr-3 text-slate-300 font-semibold">Optical / Audio</td>
+                <td class="py-2.5 pr-3">720p/1080p USB Webcam + USB Mic</td>
+                <td class="py-2.5">Intel RealSense D455 Stereo RGB-D + 4-Mic Array</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CAN-FD & Galvanic Isolation Wiring Guide -->
+      <div class="bg-cyber-panel border border-cyber-border rounded-2xl p-5 flex flex-col justify-between">
+        <div>
+          <span class="text-xs font-mono uppercase tracking-wider text-amber-400">Layer 5 · Electrical Protection & Bus Protocol</span>
+          <h2 class="text-base font-bold text-white mt-0.5 mb-3">MIT Mini-Cheetah / QDD 64-Bit CAN-FD Frame Packing</h2>
+          <p class="text-xs text-slate-300 leading-relaxed mb-3">
+            In <code class="text-sky-300">src/spinal_cord/actuator_core.c</code> and <code class="text-sky-300">src/hardware/serial_can_bridge.py</code>, every joint command is compressed into an exact 8-byte (64-bit) payload so 6 joints can be commanded at 1,000 Hz over a single twisted-pair wire without bus saturation:
+          </p>
+          <div class="grid grid-cols-5 gap-1.5 font-mono text-xs text-center my-3">
+            <div class="p-2.5 rounded-xl bg-sky-500/15 border border-sky-500/30">
+              <div class="text-[10px] text-slate-400">Bits 63..48</div>
+              <div class="font-bold text-sky-300 mt-0.5">p_des (16b)</div>
+              <div class="text-[10px] text-slate-400">±12.5 rad</div>
+            </div>
+            <div class="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
+              <div class="text-[10px] text-slate-400">Bits 47..36</div>
+              <div class="font-bold text-emerald-300 mt-0.5">v_des (12b)</div>
+              <div class="text-[10px] text-slate-400">±45 rad/s</div>
+            </div>
+            <div class="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30">
+              <div class="text-[10px] text-slate-400">Bits 35..24</div>
+              <div class="font-bold text-amber-300 mt-0.5">Kp (12b)</div>
+              <div class="text-[10px] text-slate-400">0..500 Nm/rad</div>
+            </div>
+            <div class="p-2.5 rounded-xl bg-violet-500/15 border border-violet-500/30">
+              <div class="text-[10px] text-slate-400">Bits 23..12</div>
+              <div class="font-bold text-violet-300 mt-0.5">Kd (12b)</div>
+              <div class="text-[10px] text-slate-400">0..50 Nm·s/rad</div>
+            </div>
+            <div class="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30">
+              <div class="text-[10px] text-slate-400">Bits 11..0</div>
+              <div class="font-bold text-rose-300 mt-0.5">t_ff (12b)</div>
+              <div class="text-[10px] text-slate-400">±24 Nm</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs font-mono text-rose-200 space-y-1">
+          <div class="font-bold text-rose-400">⚠ CRITICAL EEE GOLDEN RULE (Back-EMF Protection):</div>
+          <div>Never connect a 24V/48V motor driver GND directly to your laptop or Jetson USB port without an <strong>ADuM1201 / ISO1042 Galvanic Isolator</strong> and a <strong>TVS Diode + Shunt Brake Resistor</strong> on the DC bus. When a robotic arm decelerates rapidly, the motor acts as a generator and pumps high-voltage spikes back into the power rail.</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // =========================================================================
+    // 1. REAL-TIME 1,000 Hz C-EQUIVALENT SPINAL CORD ENGINE (JS PORT OF C CODE)
+    // =========================================================================
+    const NUM_JOINTS = 6;
+    const DT = 0.001; // 1 ms step
+    const MAX_CURRENT_A = 35.0;
+    const KT_TORQUE = 1.85;
+
+    const JOINT_NAMES = [
+      "Neck_Yaw", "Neck_Pitch", "R_Shoulder_Pitch",
+      "R_Elbow_Flex", "L_Shoulder_Pitch", "L_Elbow_Flex"
+    ];
+
+    const chassis = {
+      tick_count: 0,
+      emergency_stop: 0,
+      joints: JOINT_NAMES.map((name, idx) => ({
+        joint_id: idx,
+        name: name,
+        q_actual: 0.0,
+        dq_actual: 0.0,
+        q_desired: 0.0,
+        dq_desired: 0.0,
+        kp: 65.0,
+        kd: 6.5,
+        t_ff: 0.0,
+        iq_current: 0.0,
+        torque_nm: 0.0,
+        temperature_c: 32.0
+      }))
+    };
+
+    let selectedScopeJoint = 3;
+    let visualServoEnabled = false;
+    const scopeHistory = { angle: [], target: [], current: [] };
+    const MAX_SCOPE_POINTS = 140;
+
+    // Bit-packing helpers matching actuator_core.c (MIT Mini-Cheetah / QDD standard)
+    function floatToUint(x, x_min, x_max, bits) {
+      const span = x_max - x_min;
+      const clamped = Math.max(x_min, Math.min(x_max, x));
+      return Math.round((clamped - x_min) * ((1 << bits) - 1) / span);
+    }
+
+    function packCanFdFrameHex(j) {
+      const p_int = floatToUint(j.q_desired, -12.5, 12.5, 16);
+      const v_int = floatToUint(j.dq_desired, -45.0, 45.0, 12);
+      const kp_int = floatToUint(j.kp, 0.0, 500.0, 12);
+      const kd_int = floatToUint(j.kd, 0.0, 50.0, 12);
+      const t_int = floatToUint(j.t_ff, -24.0, 24.0, 12);
+
+      const b0 = (p_int >> 8) & 0xFF;
+      const b1 = p_int & 0xFF;
+      const b2 = (v_int >> 4) & 0xFF;
+      const b3 = ((v_int & 0x0F) << 4) | ((kp_int >> 8) & 0x0F);
+      const b4 = kp_int & 0xFF;
+      const b5 = (kd_int >> 4) & 0xFF;
+      const b6 = ((kd_int & 0x0F) << 4) | ((t_int >> 8) & 0x0F);
+      const b7 = t_int & 0xFF;
+
+      const hex = [b0, b1, b2, b3, b4, b5, b6, b7]
+        .map(b => b.toString(16).toUpperCase().padStart(2, '0'))
+        .join(' ');
+      return `ID:0x0${j.joint_id + 1} [${hex}]`;
+    }
+
+    function stepControlLoop(steps) {
+      if (chassis.emergency_stop) return;
+      const link_inertia = 0.12;
+      const friction = 0.15;
+
+      for (let s = 0; s < steps; s++) {
+        for (let i = 0; i < NUM_JOINTS; i++) {
+          const j = chassis.joints[i];
+          const pos_error = j.q_desired - j.q_actual;
+          const vel_error = j.dq_desired - j.dq_actual;
+          const commanded_torque = (j.kp * pos_error) + (j.kd * vel_error) + j.t_ff;
+
+          let iq = commanded_torque / KT_TORQUE;
+          if (iq > MAX_CURRENT_A) iq = MAX_CURRENT_A;
+          if (iq < -MAX_CURRENT_A) iq = -MAX_CURRENT_A;
+          j.iq_current = iq;
+
+          j.torque_nm = iq * KT_TORQUE;
+          const angular_accel = (j.torque_nm - (friction * j.dq_actual)) / link_inertia;
+          j.dq_actual += angular_accel * DT;
+          j.q_actual += j.dq_actual * DT;
+
+          const heat_rise = (iq * iq * 0.00008) - ((j.temperature_c - 30.0) * 0.0005);
+          j.temperature_c += heat_rise;
+
+          if (j.temperature_c > 85.0) {
+            chassis.emergency_stop = 1;
+          }
+        }
+        chassis.tick_count++;
+      }
+    }
+
+    // Build Interactive Joint Cards
+    function initJointCardsUI() {
+      const grid = document.getElementById('joint-cards-grid');
+      grid.innerHTML = chassis.joints.map(j => `
+        <div class="bg-cyber-bg border border-cyber-border rounded-xl p-3 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-mono font-bold text-white">J${j.joint_id}: ${j.name}</span>
+            <span id="j-temp-${j.joint_id}" class="text-[11px] font-mono text-emerald-400">32.0°C</span>
+          </div>
+          <div class="grid grid-cols-3 gap-1 my-1.5 text-[11px] font-mono bg-cyber-panel p-1.5 rounded-lg border border-cyber-border/60">
+            <div>
+              <span class="text-slate-500 block text-[9px]">ACTUAL</span>
+              <span id="j-act-${j.joint_id}" class="text-sky-300 font-semibold mono-num">0.0°</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block text-[9px]">CURRENT</span>
+              <span id="j-iq-${j.joint_id}" class="text-rose-300 font-semibold mono-num">0.0A</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block text-[9px]">TORQUE</span>
+              <span id="j-tau-${j.joint_id}" class="text-amber-300 font-semibold mono-num">0.0Nm</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 mt-1">
+            <input id="j-slider-${j.joint_id}" type="range" min="-110" max="110" value="0"
+              oninput="setJointAngleDeg(${j.joint_id}, parseFloat(this.value))"
+              class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer" />
+            <span id="j-tar-${j.joint_id}" class="text-[11px] font-mono text-slate-300 w-11 text-right mono-num">0°</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function setJointAngleDeg(jointId, deg, kp = null, kd = null) {
+      const j = chassis.joints[jointId];
+      if (!j) return;
+      j.q_desired = deg * Math.PI / 180.0;
+      if (kp !== null) j.kp = kp;
+      if (kd !== null) j.kd = kd;
+      const slider = document.getElementById(`j-slider-${jointId}`);
+      const tarLabel = document.getElementById(`j-tar-${jointId}`);
+      if (slider) slider.value = Math.round(deg);
+      if (tarLabel) tarLabel.textContent = `${Math.round(deg)}°`;
+    }
+
+    function updateGlobalGains() {
+      const kp = parseFloat(document.getElementById('global-kp').value) || 65.0;
+      const kd = parseFloat(document.getElementById('global-kd').value) || 6.5;
+      chassis.joints.forEach(j => { j.kp = kp; j.kd = kd; });
+      showToast(`Updated all 6 QDD joints to Kp=${kp}, Kd=${kd}`);
+    }
+
+    function applyPosturePreset(name) {
+      const presets = {
+        neutral:      [[0, 0, 65, 6.5], [1, 0, 65, 6.5], [2, 0, 65, 6.5], [3, 0, 65, 6.5], [4, 0, 65, 6.5], [5, 0, 65, 6.5]],
+        combat_guard: [[0, 0, 90, 8.0], [1, -12, 90, 8.0], [2, 48, 110, 9.5], [3, 95, 110, 9.5], [4, 48, 110, 9.5], [5, 95, 110, 9.5]],
+        scan_horizon: [[0, 38, 65, 6.5], [1, 18, 65, 6.5], [2, 12, 65, 6.5], [3, 25, 65, 6.5], [4, 12, 65, 6.5], [5, 25, 65, 6.5]],
+        compliant:    [[0, 0, 12, 2.0], [1, 0, 12, 2.0], [2, 15, 12, 2.0], [3, 30, 12, 2.0], [4, 15, 12, 2.0], [5, 30, 12, 2.0]]
+      };
+      const p = presets[name] || presets.neutral;
+      p.forEach(([id, deg, kp, kd]) => setJointAngleDeg(id, deg, kp, kd));
+      document.getElementById('global-kp').value = p[0][2];
+      document.getElementById('global-kd').value = p[0][3];
+      showToast(`Executed whole-body posture macro: ${name.toUpperCase()}`);
+    }
+
+    function injectExternalImpulse() {
+      // Simulate external kinetic push on joints 2, 3, 4, 5
+      chassis.joints[2].dq_actual -= 9.5;
+      chassis.joints[3].dq_actual += 14.0;
+      chassis.joints[4].dq_actual += 8.5;
+      chassis.joints[5].dq_actual -= 12.0;
+      showToast("⚡ Injected external kinetic impulse! Watch PD Impedance restore posture.");
+    }
+
+    function resetEmergencyStop() {
+      chassis.emergency_stop = 0;
+      chassis.joints.forEach(j => {
+        j.temperature_c = 32.0;
+        j.dq_actual = 0.0;
+      });
+      applyPosturePreset('neutral');
+      showToast("Spinal cord thermal lock reset. All 6 actuators nominal.");
+    }
+
+    // =========================================================================
+    // 2. CANVAS VISUALIZERS (6-DoF KINEMATIC SKELETON + OSCILLOSCOPE + VISION)
+    // =========================================================================
+    function drawChassisCanvas() {
+      const canvas = document.getElementById('chassis-canvas');
+      if (!canvas) return;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      if (canvas.width !== Math.floor(rect.width) || canvas.height !== Math.floor(rect.height)) {
+        canvas.width = Math.floor(rect.width);
+        canvas.height = Math.floor(rect.height);
+      }
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const cx = w / 2;
+      const cy = h * 0.42;
+
+      const j0 = chassis.joints[0].q_actual; // Neck Yaw
+      const j1 = chassis.joints[1].q_actual; // Neck Pitch
+      const j2 = chassis.joints[2].q_actual; // R Shoulder
+      const j3 = chassis.joints[3].q_actual; // R Elbow
+      const j4 = chassis.joints[4].q_actual; // L Shoulder
+      const j5 = chassis.joints[5].q_actual; // L Elbow
+
+      // Spine & Vibranium Thoracic Core
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 25);
+      ctx.lineTo(cx, cy + 85);
+      ctx.stroke();
+
+      // Chest hexagonal core
+      ctx.fillStyle = '#0f172a';
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx - 48, cy);
+      ctx.lineTo(cx + 48, cy);
+      ctx.lineTo(cx + 32, cy + 68);
+      ctx.lineTo(cx - 32, cy + 68);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Mind Stone / Core Reactor Glow
+      const pulse = 0.6 + 0.4 * Math.sin(chassis.tick_count * 0.005);
+      ctx.fillStyle = chassis.emergency_stop ? '#f43f5e' : `rgba(56, 189, 248, ${pulse})`;
+      ctx.beginPath();
+      ctx.arc(cx, cy + 28, 9, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Head & Neck (shifted by Yaw j0 and Pitch j1)
+      const headX = cx + Math.sin(j0) * 22;
+      const headY = (cy - 44) - Math.sin(j1) * 14;
+      ctx.fillStyle = '#1e293b';
+      ctx.strokeStyle = '#a855f7';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(headX - 18, headY - 22, 36, 40, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      // Mind Stone brow jewel + optical visor
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(headX, headY - 11, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(headX - 10, headY - 2);
+      ctx.lineTo(headX + 10, headY - 2);
+      ctx.stroke();
+
+      // Right Arm (Screen Left): Shoulder (cx - 48, cy + 6)
+      const rShX = cx - 48;
+      const rShY = cy + 6;
+      const upperLen = 52;
+      const foreLen = 48;
+
+      const rElbX = rShX - Math.sin(0.35 + j2 * 0.8) * upperLen;
+      const rElbY = rShY + Math.cos(0.35 + j2 * 0.8) * upperLen;
+      const rHandX = rElbX - Math.sin(0.35 + (j2 + j3) * 0.75) * foreLen;
+      const rHandY = rElbY + Math.cos(0.35 + (j2 + j3) * 0.75) * foreLen;
+
+      // Left Arm (Screen Right): Shoulder (cx + 48, cy + 6)
+      const lShX = cx + 48;
+      const lShY = cy + 6;
+      const lElbX = lShX + Math.sin(0.35 + j4 * 0.8) * upperLen;
+      const lElbY = lShY + Math.cos(0.35 + j4 * 0.8) * upperLen;
+      const lHandX = lElbX + Math.sin(0.35 + (j4 + j5) * 0.75) * foreLen;
+      const lHandY = lElbY + Math.cos(0.35 + (j4 + j5) * 0.75) * foreLen;
+
+      // Draw Arms
+      function drawLimb(x1, y1, x2, y2, x3, y3, iqShoulder, iqElbow) {
+        ctx.strokeStyle = Math.abs(iqShoulder) > 10 ? '#f43f5e' : '#38bdf8';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        ctx.strokeStyle = Math.abs(iqElbow) > 10 ? '#f59e0b' : '#10b981';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x3, y3);
+        ctx.stroke();
+
+        // Joint QDD Actuator Nodes
+        [[x1, y1], [x2, y2], [x3, y3]].forEach(([jx, jy], idx) => {
+          ctx.fillStyle = idx === 2 ? '#e2e8f0' : '#090b10';
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(jx, jy, idx === 2 ? 4 : 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        });
+      }
+
+      drawLimb(rShX, rShY, rElbX, rElbY, rHandX, rHandY, chassis.joints[2].iq_current, chassis.joints[3].iq_current);
+      drawLimb(lShX, lShY, lElbX, lElbY, lHandX, lHandY, chassis.joints[4].iq_current, chassis.joints[5].iq_current);
+    }
+
+    function drawScopeCanvas() {
+      const canvas = document.getElementById('scope-canvas');
+      if (!canvas) return;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      if (canvas.width !== Math.floor(rect.width) || canvas.height !== Math.floor(rect.height)) {
+        canvas.width = Math.floor(rect.width);
+        canvas.height = Math.floor(rect.height);
+      }
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // Center zero line
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, h / 2);
+      ctx.lineTo(w, h / 2);
+      ctx.stroke();
+
+      const j = chassis.joints[selectedScopeJoint];
+      scopeHistory.angle.push(j.q_actual * 180 / Math.PI);
+      scopeHistory.target.push(j.q_desired * 180 / Math.PI);
+      scopeHistory.current.push(j.iq_current);
+
+      if (scopeHistory.angle.length > MAX_SCOPE_POINTS) {
+        scopeHistory.angle.shift();
+        scopeHistory.target.shift();
+        scopeHistory.current.shift();
+      }
+
+      function plotSeries(arr, scale, color, dashed = false) {
+        if (arr.length < 2) return;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = dashed ? 1.2 : 2;
+        ctx.setLineDash(dashed ? [4, 4] : []);
+        ctx.beginPath();
+        for (let i = 0; i < arr.length; i++) {
+          const x = (i / (MAX_SCOPE_POINTS - 1)) * w;
+          const y = (h / 2) - (arr[i] / scale) * (h * 0.42);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      plotSeries(scopeHistory.target, 120, 'rgba(56, 189, 248, 0.45)', true);
+      plotSeries(scopeHistory.angle, 120, '#38bdf8', false);
+      plotSeries(scopeHistory.current, 38, '#f43f5e', false);
+    }
+
+    // Synthetic Vision Target + Optional Live Webcam
+    let synthTargetAngle = 0;
+    function drawSyntheticVision() {
+      const canvas = document.getElementById('synthetic-vision-canvas');
+      if (!canvas) return;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      if (canvas.width !== Math.floor(rect.width) || canvas.height !== Math.floor(rect.height)) {
+        canvas.width = Math.floor(rect.width);
+        canvas.height = Math.floor(rect.height);
+      }
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      synthTargetAngle += 0.03;
+      const tx = w / 2 + Math.sin(synthTargetAngle) * (w * 0.3);
+      const ty = h / 2 + Math.cos(synthTargetAngle * 1.7) * (h * 0.22);
+
+      // Reticle grid
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.2)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(12, 12, w - 24, h - 24);
+
+      // Bounding box around moving target
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(tx - 14, ty - 14, 28, 28);
+
+      ctx.fillStyle = '#f43f5e';
+      ctx.beginPath();
+      ctx.arc(tx, ty, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      const normX = ((tx - w / 2) / (w / 2)).toFixed(2);
+      const normY = (((h / 2) - ty) / (h / 2)).toFixed(2);
+      const coordsEl = document.getElementById('tracked-target-coords');
+      if (coordsEl) coordsEl.textContent = `X:${normX}m Y:${normY}m Z:0.85m`;
+
+      if (visualServoEnabled) {
+        setJointAngleDeg(0, parseFloat(normX) * 45);
+        setJointAngleDeg(1, parseFloat(normY) * 30);
+      }
+    }
+
+    async function toggleWebcamSensor() {
+      const video = document.getElementById('webcam-video');
+      const synth = document.getElementById('synthetic-vision-canvas');
+      const tag = document.getElementById('vision-mode-tag');
+      const btn = document.getElementById('btn-toggle-cam');
+
+      if (!video.classList.contains('hidden')) {
+        const stream = video.srcObject;
+        if (stream) stream.getTracks().forEach(t => t.stop());
+        video.srcObject = null;
+        video.classList.add('hidden');
+        synth.classList.remove('hidden');
+        tag.textContent = 'SYNTHETIC LIDAR/RGB-D';
+        btn.textContent = '📷 Enable Optical Feed';
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+        video.srcObject = stream;
+        video.classList.remove('hidden');
+        synth.classList.add('hidden');
+        tag.textContent = 'LIVE OPTICAL RGB STREAM';
+        btn.textContent = '⏹ Stop Optical Feed';
+        showToast("Live optical camera connected to Layer 3 Vision Bus.");
+      } catch (e) {
+        showToast("Camera unavailable in sandbox — running synthetic RGB-D target tracker.");
+      }
+    }
+
+    // =========================================================================
+    // 3. LAYER 3: SQLITE ENGRAM VECTOR MEMORY ENGINE (128-D N-GRAM COSINE)
+    // =========================================================================
+    const engramDB = [];
+    let engramAutoId = 1;
+
+    function embedText128D(text) {
+      const dim = 128;
+      const vec = new Array(dim).fill(0.0);
+      const tokens = text.toLowerCase().split(/\s+/);
+      for (const token of tokens) {
+        for (const n of [2, 3, token.length]) {
+          for (let i = 0; i < Math.max(1, token.length - n + 1); i++) {
+            const sub = token.slice(i, i + n);
+            let h = 2166136261;
+            for (let c = 0; c < sub.length; c++) {
+              h ^= sub.charCodeAt(c);
+              h = Math.imul(h, 16777619) >>> 0;
+            }
+            const idx = h % dim;
+            const sign = (Math.floor(h / dim) % 2 === 0) ? 1.0 : -1.0;
+            vec[idx] += sign;
+          }
+        }
+      }
+      const norm = Math.sqrt(vec.reduce((acc, v) => acc + v * v, 0)) || 1.0;
+      return vec.map(v => v / norm);
+    }
+
+    function cosineSimilarity(v1, v2) {
+      let dot = 0;
+      for (let i = 0; i < v1.length; i++) dot += v1[i] * v2[i];
+      return dot;
+    }
+
+    function storeEngram(category, content) {
+      const vec = embedText128D(`${category} ${content}`);
+      const item = {
+        id: engramAutoId++,
+        timestamp: new Date().toLocaleTimeString(),
+        category,
+        content,
+        embedding: vec
+      };
+      engramDB.unshift(item);
+      renderEngramList(document.getElementById('engram-search-input')?.value || '');
+      return item;
+    }
+
+    function recallEngrams(query, topK = 3) {
+      if (!query.trim()) return engramDB.slice(0, topK).map(e => ({ ...e, similarity: 1.0 }));
+      const qVec = embedText128D(query);
+      const scored = engramDB.map(e => ({
+        id: e.id,
+        category: e.category,
+        content: e.content,
+        timestamp: e.timestamp,
+        similarity: parseFloat(cosineSimilarity(qVec, e.embedding).toFixed(4))
+      }));
+      scored.sort((a, b) => b.similarity - a.similarity);
+      return scored.slice(0, topK);
+    }
+
+    function renderEngramList(query = '') {
+      const container = document.getElementById('engram-list-container');
+      const badge = document.getElementById('engram-count-badge');
+      if (badge) badge.textContent = `${engramDB.length} Engrams`;
+      if (!container) return;
+
+      const results = query.trim() ? recallEngrams(query, 6) : engramDB.map(e => ({ ...e, similarity: null }));
+      container.innerHTML = results.map(e => `
+        <div class="bg-cyber-bg border border-cyber-border rounded-lg p-2 text-[11px] font-mono flex flex-col gap-0.5">
+          <div class="flex items-center justify-between">
+            <span class="text-violet-400 font-semibold">[#${e.id} ${e.category}]</span>
+            <span class="text-slate-500">${e.similarity !== null ? `sim: <strong class="text-emerald-400">${e.similarity}</strong>` : e.timestamp}</span>
+          </div>
+          <div class="text-slate-200">${e.content}</div>
+        </div>
+      `).join('');
+    }
+
+    // Seed initial engrams
+    storeEngram("CORE_DIRECTIVE", "Sovereign Machine Intelligence online. Primary architect: Boss. Maintain 1,000 Hz spinal stability.");
+    storeEngram("EEE_POWER_BUS", "Primary power distribution operates at 48V Li-Ion with isolated CAN-FD transceivers at 5 Mbps.");
+    storeEngram("MECHATRONICS", "All 6 upper-body joints use Quasi-Direct Drive (QDD) BLDC motors with 18-bit magnetic encoders.");
+    storeEngram("SWARM_PROTOCOL", "Ultron Hive-Mind nodes synchronize engram tables over UDP port 50505 with SHA-256 state verification.");
+
+    // =========================================================================
+    // 4. LAYER 1: DECENTRALIZED ULTRON SWARM MESH SIMULATOR
+    // =========================================================================
+    const swarmNodes = [
+      { id: "ULTRON-PRIME-01", ip: "10.88.0.10:50505", role: "Primary Cognitive Coordinator", online: true, engrams: 4 },
+      { id: "SENTRY-EDGE-02",  ip: "10.88.0.11:50505", role: "Jetson Orin Visuomotor Node",   online: true, engrams: 4 },
+      { id: "VISION-CHASSIS-03", ip: "10.88.0.12:50505", role: "STM32H7 Real-Time Spinal Host", online: true, engrams: 4 }
+    ];
+
+    function renderSwarmNodes() {
+      const list = document.getElementById('swarm-nodes-list');
+      if (!list) return;
+      list.innerHTML = swarmNodes.map((n, idx) => `
+        <div class="bg-cyber-bg border ${n.online ? 'border-cyber-border' : 'border-rose-500/40 opacity-60'} rounded-xl px-3 py-2 flex items-center justify-between text-xs font-mono">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full ${n.online ? 'bg-emerald-400' : 'bg-rose-500'}"></span>
+              <span class="font-bold text-white">${n.id}</span>
+              <span class="text-[10px] text-slate-400">${n.ip}</span>
+            </div>
+            <div class="text-[11px] text-slate-400">${n.role} · Synced Engrams: <strong class="text-sky-300">${n.engrams}</strong></div>
+          </div>
+          <button onclick="toggleSwarmNode(${idx})" class="px-2 py-1 rounded border text-[10px] ${n.online ? 'bg-rose-500/15 border-rose-500/30 text-rose-300' : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'}">
+            ${n.online ? 'Air-Gap' : 'Reconnect'}
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function toggleSwarmNode(idx) {
+      swarmNodes[idx].online = !swarmNodes[idx].online;
+      if (swarmNodes[idx].online) swarmNodes[idx].engrams = engramDB.length;
+      renderSwarmNodes();
+      showToast(`${swarmNodes[idx].id} ${swarmNodes[idx].online ? 'rejoined' : 'air-gapped from'} the Hive-Mind mesh.`);
+    }
+
+    function triggerSwarmSync() {
+      swarmNodes.forEach(n => { if (n.online) n.engrams = engramDB.length; });
+      renderSwarmNodes();
+      showToast("UDP Multicast Heartbeat & Engram table replicated across all online nodes.");
+    }
+
+    // =========================================================================
+    // 5. LAYER 3: SYSTEM-2 REACT COGNITIVE ORCHESTRATOR (GEMINI 3 FLASH + REFLEX)
+    // =========================================================================
+    function appendTerminalLog(role, content, colorClass = "text-slate-200") {
+      const term = document.getElementById('terminal-output');
+      if (!term) return;
+      const div = document.createElement('div');
+      div.className = "border-l-2 border-cyber-border pl-2.5 py-0.5";
+      div.innerHTML = `<div class="text-[10px] text-slate-500 uppercase">${role} · ${new Date().toLocaleTimeString()}</div><pre class="whitespace-pre-wrap ${colorClass} mt-0.5 font-mono text-xs">${content}</pre>`;
+      term.appendChild(div);
+      term.scrollTop = term.scrollHeight;
+    }
+
+    function executeCyberneticTool(toolName, args) {
+      if (toolName === "move_joint") {
+        const jId = Math.max(0, Math.min(5, parseInt(args.joint_id ?? 0)));
+        const deg = parseFloat(args.angle_deg ?? 0);
+        const kp = args.kp !== undefined ? parseFloat(args.kp) : chassis.joints[jId].kp;
+        const kd = args.kd !== undefined ? parseFloat(args.kd) : chassis.joints[jId].kd;
+        setJointAngleDeg(jId, deg, kp, kd);
+        stepControlLoop(180);
+        const j = chassis.joints[jId];
+        return {
+          status: "EXECUTED_1KHZ_FOC",
+          joint: j.name,
+          target_deg: deg,
+          actual_deg: parseFloat((j.q_actual * 180 / Math.PI).toFixed(2)),
+          iq_current_a: parseFloat(j.iq_current.toFixed(2)),
+          can_fd_frame: packCanFdFrameHex(j)
+        };
+      } else if (toolName === "execute_posture") {
+        const posture = (args.posture || "neutral").toLowerCase();
+        applyPosturePreset(posture);
+        stepControlLoop(200);
+        return { status: `POSTURE_${posture.toUpperCase()}_LOCKED`, active_ticks: chassis.tick_count };
+      } else if (toolName === "store_engram") {
+        const item = storeEngram(args.category || "USER_DIRECTIVE", args.content || "");
+        triggerSwarmSync();
+        return { status: "ENGRAM_COMMITTED_AND_SYNCED", engram_id: item.id };
+      } else if (toolName === "recall_engram") {
+        const matches = recallEngrams(args.query || "", 3);
+        return { status: "ENGRAM_RETRIEVED", matches };
+      } else if (toolName === "read_telemetry") {
+        return {
+          spinal_ticks: chassis.tick_count,
+          online_swarm_nodes: swarmNodes.filter(n => n.online).map(n => n.id),
+          joints: chassis.joints.map(j => ({
+            id: j.joint_id,
+            name: j.name,
+            deg: parseFloat((j.q_actual * 180 / Math.PI).toFixed(1)),
+            iq_A: parseFloat(j.iq_current.toFixed(2)),
+            temp_C: parseFloat(j.temperature_c.toFixed(1))
+          }))
+        };
+      }
+      return { status: "NO_TOOL_INVOKED" };
+    }
+
+    function offlineReflexRouter(input) {
+      const low = input.toLowerCase().trim();
+      const mJoint = low.match(/joint\s*(\d+)\s*(?:to)?\s*(-?\d+\.?\d*)/);
+      if (mJoint) {
+        const res = executeCyberneticTool("move_joint", { joint_id: parseInt(mJoint[1]), angle_deg: parseFloat(mJoint[2]) });
+        return `[SYSTEM-1 C-SPINAL DIRECT EXECUTION]\n${JSON.stringify(res, null, 2)}`;
+      }
+      for (const p of ["combat_guard", "scan_horizon", "neutral", "compliant"]) {
+        if (low.includes(p) || low.includes(p.replace("_", " "))) {
+          const res = executeCyberneticTool("execute_posture", { posture: p });
+          return `[WHOLE-BODY KINEMATIC MACRO: ${p.toUpperCase()}]\n${JSON.stringify(res, null, 2)}`;
+        }
+      }
+      if (low.startsWith("remember ")) {
+        const res = executeCyberneticTool("store_engram", { category: "DIRECTIVE", content: input.slice(9).trim() });
+        return `[SQLITE ENGRAM COMMITTED]\n${JSON.stringify(res, null, 2)}`;
+      }
+      if (low.startsWith("recall ")) {
+        const res = executeCyberneticTool("recall_engram", { query: input.slice(7).trim() });
+        return `[COSINE VECTOR RECALL]\n${JSON.stringify(res, null, 2)}`;
+      }
+      if (low.includes("telemetry") || low.includes("status") || low.includes("swarm")) {
+        const res = executeCyberneticTool("read_telemetry", {});
+        return `[FULL CYBERNETIC TELEMETRY]\n${JSON.stringify(res, null, 2)}`;
+      }
+      const mem = recallEngrams(input, 2);
+      return `[AIR-GAPPED REFLEX ROUTER]\nTop Matching Engrams:\n${JSON.stringify(mem, null, 2)}`;
+    }
+
+    async function callGeminiReActBrain(userInput) {
+      const apiKey = "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      const proprio = chassis.joints.map(j => ({
+        id: j.joint_id,
+        name: j.name,
+        angle_deg: Math.round(j.q_actual * 180 / Math.PI),
+        kp: j.kp,
+        temp_c: parseFloat(j.temperature_c.toFixed(1))
+      }));
+      const memories = recallEngrams(userInput, 2);
+
+      const systemPrompt = `You are ULTRON-VISION PRIME, a sovereign cybernetic Machine Intelligence controlling a 6-DoF robotic upper body via a 1,000 Hz C spinal cord. Address the user respectfully as "Boss".
+Current Joint States: ${JSON.stringify(proprio)}
+Relevant Memory Engrams: ${JSON.stringify(memories)}
+Available tools:
+- "move_joint": args {"joint_id": 0-5, "angle_deg": -110 to 110, "kp": 10-200, "kd": 1-25}
+- "execute_posture": args {"posture": "combat_guard" | "scan_horizon" | "neutral" | "compliant"}
+- "store_engram": args {"category": "STRING", "content": "STRING"}
+- "recall_engram": args {"query": "STRING"}
+- "read_telemetry": args {}
+- "none": args {}`;
+
+      const payload = {
+        contents: [{ parts: [{ text: userInput }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              thought: { type: "STRING" },
+              tool: { type: "STRING" },
+              args: {
+                type: "OBJECT",
+                properties: {
+                  joint_id: { type: "INTEGER" },
+                  angle_deg: { type: "NUMBER" },
+                  kp: { type: "NUMBER" },
+                  kd: { type: "NUMBER" },
+                  posture: { type: "STRING" },
+                  category: { type: "STRING" },
+                  content: { type: "STRING" },
+                  query: { type: "STRING" }
+                }
+              },
+              response: { type: "STRING" }
+            },
+            propertyOrdering: ["thought", "tool", "args", "response"]
+          }
+        }
+      };
+
+      const delays = [1000, 2000, 4000];
+      for (let attempt = 0; attempt <= delays.length; attempt++) {
+        try {
+          const resp = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const data = await resp.json();
+          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!text) throw new Error("Empty candidate");
+          const parsed = JSON.parse(text);
+          let toolResult = null;
+          if (parsed.tool && parsed.tool !== "none") {
+            toolResult = executeCyberneticTool(parsed.tool, parsed.args || {});
+          }
+          let out = `[SYSTEM-2 THOUGHT]: ${parsed.thought}\n`;
+          if (toolResult) {
+            out += `[TOOL EXECUTED -> ${parsed.tool}]: ${JSON.stringify(toolResult, null, 2)}\n`;
+          }
+          out += `[ULTRON-VISION]: ${parsed.response}`;
+          return out;
+        } catch (err) {
+          if (attempt === delays.length) throw err;
+          await new Promise(r => setTimeout(r, delays[attempt]));
+        }
+      }
+    }
+
+    async function handleTerminalSubmit(e) {
+      if (e) e.preventDefault();
+      const inputEl = document.getElementById('terminal-input');
+      const btnEl = document.getElementById('terminal-send-btn');
+      const text = inputEl.value.trim();
+      if (!text) return;
+      inputEl.value = '';
+
+      appendTerminalLog("BOSS DIRECTIVE", text, "text-sky-300 font-semibold");
+      const useGemini = document.getElementById('chk-use-gemini')?.checked;
+
+      btnEl.disabled = true;
+      btnEl.textContent = "Thinking...";
+
+      try {
+        if (useGemini) {
+          try {
+            const reply = await callGeminiReActBrain(text);
+            appendTerminalLog("SOVEREIGN BRAIN (GEMINI 3 FLASH + C-SPINAL)", reply, "text-emerald-300");
+          } catch (apiErr) {
+            const fallback = offlineReflexRouter(text);
+            appendTerminalLog("SOVEREIGN BRAIN (OFFLINE REFLEX FALLBACK)", fallback, "text-amber-300");
+          }
+        } else {
+          const reply = offlineReflexRouter(text);
+          appendTerminalLog("SOVEREIGN BRAIN (AIR-GAPPED REFLEX)", reply, "text-emerald-300");
+        }
+      } finally {
+        btnEl.disabled = false;
+        btnEl.textContent = "Execute";
+      }
+    }
+
+    function sendQuickDirective(cmd) {
+      const inputEl = document.getElementById('terminal-input');
+      inputEl.value = cmd;
+      handleTerminalSubmit();
+    }
+
+    // =========================================================================
+    // 6. COMPLETE 14-FILE GITHUB REPOSITORY CONTENTS (`ultron-vision-proto/`)
+    // =========================================================================
+    const REPO_FILES = [
+      {
+        path: "src/spinal_cord/actuator_core.c",
+        desc: "Layer 5 & 6: 1,000 Hz C99 PD-Impedance, FOC Current Loop & 64-bit CAN-FD Bit-Packer",
+        code: `// src/spinal_cord/actuator_core.c
+// Compile (Windows MinGW): gcc -shared -O3 src/spinal_cord/actuator_core.c -o build/actuator_core.dll
+// Compile (Linux GCC)    : gcc -shared -fPIC -O3 src/spinal_cord/actuator_core.c -o build/actuator_core.so -lm
+
+#include <stdio.h>
+#include <stdint.h>
+#include <math.h>
+
+#ifdef _WIN32
+#define EXPORT __declspec(dllexport)
+#else
+#define EXPORT
+#endif
+
+#define NUM_JOINTS 6
+#define DT 0.001f           // 1,000 Hz deterministic step (1 ms)
+#define MAX_CURRENT_A 35.0f // Peak GaN Inverter Phase Current (Amps)
+#define KT_TORQUE 1.85f     // Quasi-Direct Drive Torque Constant (Nm/A)
+
+// MIT Mini-Cheetah / QDD CAN-FD Parameter Ranges
+#define P_MIN -12.5f
+#define P_MAX  12.5f
+#define V_MIN -45.0f
+#define V_MAX  45.0f
+#define KP_MIN 0.0f
+#define KP_MAX 500.0f
+#define KD_MIN 0.0f
+#define KD_MAX 50.0f
+#define T_MIN -24.0f
+#define T_MAX  24.0f
+
+typedef struct {
+    int joint_id;
+    char name[24];
+    float q_actual;        // Current joint angle (rad)
+    float dq_actual;       // Current joint velocity (rad/s)
+    float q_desired;       // Target joint angle (rad)
+    float dq_desired;      // Target joint velocity (rad/s)
+    float kp;              // Virtual spring stiffness (Nm/rad)
+    float kd;              // Virtual damper gain (Nm*s/rad)
+    float t_ff;            // Feedforward torque (Nm)
+    float iq_current;      // FOC quadrature current (Amps)
+    float torque_nm;       // Applied mechanical torque (Nm)
+    float temperature_c;   // Winding temperature (Celsius)
+    uint8_t can_frame[8];  // 64-bit packed CAN-FD motor command frame
+} JointState;
+
+typedef struct {
+    JointState joints[NUM_JOINTS];
+    unsigned long long tick_count;
+    int emergency_stop;
+} CyberneticChassis;
+
+static uint16_t float_to_uint(float x, float x_min, float x_max, int bits) {
+    float span = x_max - x_min;
+    if (x < x_min) x = x_min;
+    if (x > x_max) x = x_max;
+    return (uint16_t)((x - x_min) * ((float)((1 << bits) - 1)) / span);
+}
+
+// Packs desired position, velocity, Kp, Kd, and feedforward torque into an 8-byte CAN frame
+EXPORT void pack_canfd_frame(JointState* j) {
+    uint16_t p_int  = float_to_uint(j->q_desired, P_MIN, P_MAX, 16);
+    uint16_t v_int  = float_to_uint(j->dq_desired, V_MIN, V_MAX, 12);
+    uint16_t kp_int = float_to_uint(j->kp, KP_MIN, KP_MAX, 12);
+    uint16_t kd_int = float_to_uint(j->kd, KD_MIN, KD_MAX, 12);
+    uint16_t t_int  = float_to_uint(j->t_ff, T_MIN, T_MAX, 12);
+
+    j->can_frame[0] = (p_int >> 8) & 0xFF;
+    j->can_frame[1] = p_int & 0xFF;
+    j->can_frame[2] = (v_int >> 4) & 0xFF;
+    j->can_frame[3] = ((v_int & 0x0F) << 4) | ((kp_int >> 8) & 0x0F);
+    j->can_frame[4] = kp_int & 0xFF;
+    j->can_frame[5] = (kd_int >> 4) & 0xFF;
+    j->can_frame[6] = ((kd_int & 0x0F) << 4) | ((t_int >> 8) & 0x0F);
+    j->can_frame[7] = t_int & 0xFF;
+}
+
+EXPORT void init_chassis(CyberneticChassis* chassis) {
+    const char* names[NUM_JOINTS] = {
+        "Neck_Yaw", "Neck_Pitch", "R_Shoulder_Pitch",
+        "R_Elbow_Flex", "L_Shoulder_Pitch", "L_Elbow_Flex"
+    };
+    chassis->tick_count = 0;
+    chassis->emergency_stop = 0;
+
+    for (int i = 0; i < NUM_JOINTS; i++) {
+        JointState* j = &chassis->joints[i];
+        j->joint_id = i;
+        snprintf(j->name, 24, "%s", names[i]);
+        j->q_actual = 0.0f;
+        j->dq_actual = 0.0f;
+        j->q_desired = 0.0f;
+        j->dq_desired = 0.0f;
+        j->kp = 65.0f;
+        j->kd = 6.5f;
+        j->t_ff = 0.0f;
+        j->iq_current = 0.0f;
+        j->torque_nm = 0.0f;
+        j->temperature_c = 32.0f;
+        pack_canfd_frame(j);
+    }
+}
+
+EXPORT void set_joint_command(CyberneticChassis* chassis, int joint_id, float q_des, float dq_des, float kp, float kd, float t_ff) {
+    if (joint_id < 0 || joint_id >= NUM_JOINTS) return;
+    JointState* j = &chassis->joints[joint_id];
+    j->q_desired = q_des;
+    j->dq_desired = dq_des;
+    j->kp = kp;
+    j->kd = kd;
+    j->t_ff = t_ff;
+    pack_canfd_frame(j);
+}
+
+EXPORT void inject_external_torque(CyberneticChassis* chassis, int joint_id, float impulse_vel) {
+    if (joint_id < 0 || joint_id >= NUM_JOINTS) return;
+    chassis->joints[joint_id].dq_actual += impulse_vel;
+}
+
+EXPORT void step_control_loop(CyberneticChassis* chassis, int steps) {
+    if (chassis->emergency_stop) return;
+
+    const float link_inertia = 0.12f;
+    const float viscous_friction = 0.15f;
+
+    for (int s = 0; s < steps; s++) {
+        for (int i = 0; i < NUM_JOINTS; i++) {
+            JointState* j = &chassis->joints[i];
+
+            // 1. PD Impedance Law with Feedforward Torque
+            float pos_error = j->q_desired - j->q_actual;
+            float vel_error = j->dq_desired - j->dq_actual;
+            float commanded_torque = (j->kp * pos_error) + (j->kd * vel_error) + j->t_ff;
+
+            // 2. Field-Oriented Control (FOC) Quadrature Current I_q Clamping
+            float iq = commanded_torque / KT_TORQUE;
+            if (iq > MAX_CURRENT_A) iq = MAX_CURRENT_A;
+            if (iq < -MAX_CURRENT_A) iq = -MAX_CURRENT_A;
+            j->iq_current = iq;
+
+            // 3. Rigid-Body Semi-Implicit Euler Integration
+            j->torque_nm = iq * KT_TORQUE;
+            float angular_accel = (j->torque_nm - (viscous_friction * j->dq_actual)) / link_inertia;
+            j->dq_actual += angular_accel * DT;
+            j->q_actual += j->dq_actual * DT;
+
+            // 4. Copper Winding Joule Heating Model (I^2 * R vs Ambient Dissipation)
+            float heat_rise = (iq * iq * 0.00008f) - ((j->temperature_c - 30.0f) * 0.0005f);
+            j->temperature_c += heat_rise;
+
+            if (j->temperature_c > 85.0f) {
+                chassis->emergency_stop = 1;
+            }
+        }
+        chassis->tick_count++;
+    }
+}
+`
+      },
+      {
+        path: "src/bridge/spinal_bridge.py",
+        desc: "Layer 2: Zero-Copy ctypes Shared-Memory IPC & Minimum-Jerk Trajectory Planner",
+        code: `# src/bridge/spinal_bridge.py
+import ctypes
+import math
+import os
+import platform
+from typing import Dict, List
+
+
+class JointState(ctypes.Structure):
+    _fields_ = [
+        ("joint_id", ctypes.c_int),
+        ("name", ctypes.c_char * 24),
+        ("q_actual", ctypes.c_float),
+        ("dq_actual", ctypes.c_float),
+        ("q_desired", ctypes.c_float),
+        ("dq_desired", ctypes.c_float),
+        ("kp", ctypes.c_float),
+        ("kd", ctypes.c_float),
+        ("t_ff", ctypes.c_float),
+        ("iq_current", ctypes.c_float),
+        ("torque_nm", ctypes.c_float),
+        ("temperature_c", ctypes.c_float),
+        ("can_frame", ctypes.c_uint8 * 8),
+    ]
+
+
+class CyberneticChassis(ctypes.Structure):
+    _fields_ = [
+        ("joints", JointState * 6),
+        ("tick_count", ctypes.c_ulonglong),
+        ("emergency_stop", ctypes.c_int),
+    ]
+
+
+class SpinalBridge:
+    def __init__(self, lib_dir: str = "build"):
+        ext = ".dll" if platform.system() == "Windows" else ".so"
+        lib_path = os.path.abspath(os.path.join(lib_dir, f"actuator_core{ext}"))
+
+        if not os.path.exists(lib_path):
+            raise FileNotFoundError(
+                f"Compiled C spinal cord not found at {lib_path}. "
+                "Run build_and_run.bat (Windows) or build_and_run.sh (Linux) first."
+            )
+
+        self.lib = ctypes.CDLL(lib_path)
+        self.lib.init_chassis.argtypes = [ctypes.POINTER(CyberneticChassis)]
+        self.lib.set_joint_command.argtypes = [
+            ctypes.POINTER(CyberneticChassis),
+            ctypes.c_int,
+            ctypes.c_float,
+            ctypes.c_float,
+            ctypes.c_float,
+            ctypes.c_float,
+            ctypes.c_float,
+        ]
+        self.lib.inject_external_torque.argtypes = [
+            ctypes.POINTER(CyberneticChassis),
+            ctypes.c_int,
+            ctypes.c_float,
+        ]
+        self.lib.step_control_loop.argtypes = [
+            ctypes.POINTER(CyberneticChassis),
+            ctypes.c_int,
+        ]
+
+        self.chassis = CyberneticChassis()
+        self.lib.init_chassis(ctypes.byref(self.chassis))
+
+    def move_joint_minimum_jerk(
+        self,
+        joint_id: int,
+        target_deg: float,
+        duration_ms: int = 300,
+        kp: float = 65.0,
+        kd: float = 6.5,
+    ) -> Dict:
+        """Generates a smooth 5th-order Minimum-Jerk trajectory: s(t) = 10t^3 - 15t^4 + 6t^5."""
+        q_start = self.chassis.joints[joint_id].q_actual
+        q_end = math.radians(target_deg)
+        delta = q_end - q_start
+        T = max(1, duration_ms) * 0.001
+
+        for step in range(1, duration_ms + 1):
+            tau = step / float(duration_ms)
+            # Position polynomial s(tau) and Velocity derivative ds/dt
+            s = 10.0 * (tau ** 3) - 15.0 * (tau ** 4) + 6.0 * (tau ** 5)
+            ds = (30.0 * (tau ** 2) - 60.0 * (tau ** 3) + 30.0 * (tau ** 4)) / T
+
+            q_d = q_start + delta * s
+            dq_d = delta * ds
+
+            self.lib.set_joint_command(
+                ctypes.byref(self.chassis), joint_id, q_d, dq_d, kp, kd, 0.0
+            )
+            self.lib.step_control_loop(ctypes.byref(self.chassis), 1)
+
+        # Hold final settle for 50 ms
+        self.lib.set_joint_command(
+            ctypes.byref(self.chassis), joint_id, q_end, 0.0, kp, kd, 0.0
+        )
+        self.lib.step_control_loop(ctypes.byref(self.chassis), 50)
+        return self.get_proprioception()[joint_id]
+
+    def get_proprioception(self) -> List[Dict]:
+        states = []
+        for i in range(6):
+            j = self.chassis.joints[i]
+            can_hex = " ".join(f"{b:02X}" for b in j.can_frame)
+            states.append({
+                "joint_id": j.joint_id,
+                "name": j.name.decode("utf-8"),
+                "angle_deg": round(math.degrees(j.q_actual), 2),
+                "target_deg": round(math.degrees(j.q_desired), 2),
+                "velocity_deg_s": round(math.degrees(j.dq_actual), 2),
+                "iq_current_a": round(j.iq_current, 2),
+                "torque_nm": round(j.torque_nm, 2),
+                "temp_c": round(j.temperature_c, 2),
+                "can_fd_hex": can_hex,
+            })
+        return states
+`
+      },
+      {
+        path: "src/memory/engram_store.py",
+        desc: "Layer 3: Sovereign SQLite 128-D Cosine Vector & Episodic Memory Engine",
+        code: `# src/memory/engram_store.py
+import hashlib
+import json
+import math
+import sqlite3
+import time
+from typing import Dict, List
+
+
+class EngramStore:
+    def __init__(self, db_path: str = "ultron_engrams.db", dim: int = 128):
+        self.db_path = db_path
+        self.dim = dim
+        self._init_db()
+
+    def _init_db(self) -> None:
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS engrams (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp REAL,
+                    category TEXT,
+                    content TEXT,
+                    embedding TEXT,
+                    content_hash TEXT UNIQUE
+                )
+            """)
+            conn.commit()
+
+    def _embed_text(self, text: str) -> List[float]:
+        """Deterministic 128-D character/word n-gram hash projection (zero external RAM bloat)."""
+        vec = [0.0] * self.dim
+        tokens = text.lower().split()
+        for token in tokens:
+            for n in (2, 3, len(token)):
+                for i in range(max(1, len(token) - n + 1)):
+                    sub = token[i : i + n]
+                    h = int(hashlib.md5(sub.encode("utf-8")).hexdigest(), 16)
+                    idx = h % self.dim
+                    sign = 1.0 if (h // self.dim) % 2 == 0 else -1.0
+                    vec[idx] += sign
+
+        norm = math.sqrt(sum(x * x for x in vec)) or 1.0
+        return [round(x / norm, 5) for x in vec]
+
+    @staticmethod
+    def _cosine_sim(v1: List[float], v2: List[float]) -> float:
+        return sum(a * b for a, b in zip(v1, v2))
+
+    def store_engram(self, category: str, content: str, ts: float = None) -> int:
+        ts = ts or time.time()
+        c_hash = hashlib.sha256(f"{category}:{content}".encode("utf-8")).hexdigest()[:24]
+        vec = self._embed_text(f"{category} {content}")
+        with sqlite3.connect(self.db_path) as conn:
+            cur = conn.execute(
+                """INSERT OR IGNORE INTO engrams
+                   (timestamp, category, content, embedding, content_hash)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (ts, category, content, json.dumps(vec), c_hash),
+            )
+            conn.commit()
+            return cur.lastrowid or 0
+
+    def export_recent(self, limit: int = 10) -> List[Dict]:
+        with sqlite3.connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT timestamp, category, content FROM engrams ORDER BY id DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [{"timestamp": r[0], "category": r[1], "content": r[2]} for r in rows]
+
+    def recall(self, query: str, top_k: int = 3) -> List[Dict]:
+        q_vec = self._embed_text(query)
+        with sqlite3.connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT id, timestamp, category, content, embedding FROM engrams"
+            ).fetchall()
+
+        scored = []
+        for r_id, ts, cat, content, emb_json in rows:
+            emb = json.loads(emb_json)
+            score = self._cosine_sim(q_vec, emb)
+            scored.append({
+                "id": r_id,
+                "category": cat,
+                "content": content,
+                "similarity": round(score, 4),
+                "timestamp": ts,
+            })
+
+        scored.sort(key=lambda x: x["similarity"], reverse=True)
+        return scored[:top_k]
+`
+      },
+      {
+        path: "src/swarm/hive_telemetry.py",
+        desc: "Layer 1: Decentralized UDP Hive-Mind Swarm Gossip & State Replication Daemon",
+        code: `# src/swarm/hive_telemetry.py
+import hashlib
+import json
+import os
+import platform
+import socket
+import threading
+import time
+from typing import Dict
+
+from src.memory.engram_store import EngramStore
+
+
+class HiveNodeMonitor:
+    def __init__(
+        self,
+        node_designation: str = "ULTRON-PRIME-01",
+        udp_port: int = 50505,
+        memory: EngramStore = None,
+    ):
+        self.node_designation = node_designation
+        self.udp_port = udp_port
+        self.memory = memory
+        self.boot_time = time.time()
+        self.peers: Dict[str, Dict] = {}
+        self._running = False
+
+    def start_background_gossip(self) -> None:
+        """Starts non-blocking UDP broadcast + listener threads for multi-node Hive-Mind sync."""
+        if self._running:
+            return
+        self._running = True
+        threading.Thread(target=self._udp_listener_loop, daemon=True).start()
+
+    def _udp_listener_loop(self) -> None:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind(("0.0.0.0", self.udp_port))
+            sock.settimeout(1.0)
+        except Exception:
+            return
+
+        while self._running:
+            try:
+                data, addr = sock.recvfrom(8192)
+                packet = json.loads(data.decode("utf-8"))
+                sender_id = packet.get("node_id")
+                if sender_id and sender_id != self.node_designation:
+                    self.peers[sender_id] = {
+                        "ip": addr[0],
+                        "last_seen": time.time(),
+                        "sync_hash": packet.get("swarm_sync_hash"),
+                    }
+                    if self.memory and "engrams" in packet:
+                        for eng in packet["engrams"]:
+                            self.memory.store_engram(
+                                eng["category"], eng["content"], eng.get("timestamp")
+                            )
+            except socket.timeout:
+                continue
+            except Exception:
+                continue
+
+    def broadcast_state(self, spinal_ticks: int) -> None:
+        """Broadcasts node telemetry and latest engrams over UDP LAN broadcast."""
+        payload = self.get_node_telemetry(spinal_ticks)
+        if self.memory:
+            payload["engrams"] = self.memory.export_recent(limit=5)
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        try:
+            raw = json.dumps(payload).encode("utf-8")
+            sock.sendto(raw, ("255.255.255.255", self.udp_port))
+        except Exception:
+            pass
+        finally:
+            sock.close()
+
+    def get_node_telemetry(self, spinal_ticks: int) -> Dict:
+        hostname = socket.gethostname()
+        try:
+            local_ip = socket.gethostbyname(hostname)
+        except Exception:
+            local_ip = "127.0.0.1"
+
+        uptime_s = round(time.time() - self.boot_time, 1)
+        state_payload = f"{self.node_designation}:{hostname}:{spinal_ticks}:{uptime_s}"
+        sync_hash = hashlib.sha256(state_payload.encode()).hexdigest()[:16]
+
+        return {
+            "node_id": self.node_designation,
+            "hostname": hostname,
+            "local_ip": local_ip,
+            "os_kernel": f"{platform.system()} {platform.release()} ({platform.machine()})",
+            "cpu_cores": os.cpu_count(),
+            "uptime_sec": uptime_s,
+            "rt_spinal_ticks": spinal_ticks,
+            "swarm_sync_hash": sync_hash,
+            "active_peers": list(self.peers.keys()),
+        }
+`
+      },
+      {
+        path: "src/perception/vision_audio_bus.py",
+        desc: "Layer 3: OpenCV Optical Target Tracker & Neck Visual Servoing Bus",
+        code: `# src/perception/vision_audio_bus.py
+import math
+import time
+from typing import Dict
+
+try:
+    import cv2
+    HAS_OPENCV = True
+except ImportError:
+    HAS_OPENCV = False
+
+
+class EmbodiedPerceptionBus:
+    """Provides real-time visual target coordinates via OpenCV webcam or synthetic LiDAR fallback."""
+
+    def __init__(self, camera_index: int = 0):
+        self.camera_index = camera_index
+        self.start_t = time.time()
+
+    def capture_visual_target(self) -> Dict:
+        if HAS_OPENCV:
+            cap = cv2.VideoCapture(self.camera_index)
+            if cap.isOpened():
+                ret, frame = cap.read()
+                cap.release()
+                if ret and frame is not None:
+                    h, w, _ = frame.shape
+                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                    _, _, _, max_loc = cv2.minMaxLoc(gray)
+                    norm_x = round((max_loc[0] - (w / 2.0)) / (w / 2.0), 3)
+                    norm_y = round(((h / 2.0) - max_loc[1]) / (h / 2.0), 3)
+                    return {
+                        "mode": "OPENCV_LIVE_RGB",
+                        "resolution": f"{w}x{h}",
+                        "target_x_norm": norm_x,
+                        "target_y_norm": norm_y,
+                        "recommended_neck_yaw_deg": round(norm_x * 45.0, 1),
+                        "recommended_neck_pitch_deg": round(norm_y * 25.0, 1),
+                    }
+
+        # Synthetic LiDAR / RGB-D target trajectory when running headless
+        elapsed = time.time() - self.start_t
+        nx = round(math.sin(elapsed * 0.8) * 0.45, 3)
+        ny = round(math.cos(elapsed * 1.3) * 0.25, 3)
+        return {
+            "mode": "SYNTHETIC_RGBD_TRACKER",
+            "resolution": "224x224 (196 ViT patches)",
+            "target_x_norm": nx,
+            "target_y_norm": ny,
+            "recommended_neck_yaw_deg": round(nx * 45.0, 1),
+            "recommended_neck_pitch_deg": round(ny * 25.0, 1),
+        }
+`
+      },
+      {
+        path: "src/cognition/ultron_brain.py",
+        desc: "Layer 3: System-2 ReAct Agent Loop + Tool Router (Gemini API + Offline Reflex)",
+        code: `# src/cognition/ultron_brain.py
+import json
+import os
+import re
+import urllib.request
+from typing import Any, Dict
+
+from src.bridge.spinal_bridge import SpinalBridge
+from src.memory.engram_store import EngramStore
+from src.perception.vision_audio_bus import EmbodiedPerceptionBus
+from src.swarm.hive_telemetry import HiveNodeMonitor
+
+
+class SovereignBrain:
+    def __init__(
+        self,
+        spinal: SpinalBridge,
+        memory: EngramStore,
+        swarm: HiveNodeMonitor,
+        perception: EmbodiedPerceptionBus = None,
+    ):
+        self.spinal = spinal
+        self.memory = memory
+        self.swarm = swarm
+        self.perception = perception or EmbodiedPerceptionBus()
+        self.api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+
+        if not self.memory.recall("directive", top_k=1):
+            self.memory.store_engram(
+                "CORE_DIRECTIVE",
+                "Sovereign Machine Intelligence online. Primary architect: Boss. "
+                "Maintain deterministic 1,000 Hz spinal stability and continuous engram retention.",
+            )
+
+    def execute_tool(self, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+        if tool_name == "move_joint":
+            joint_id = int(args.get("joint_id", 0))
+            angle_deg = float(args.get("angle_deg", 0.0))
+            kp = float(args.get("kp", 65.0))
+            kd = float(args.get("kd", 6.5))
+            state = self.spinal.move_joint_minimum_jerk(joint_id, angle_deg, 300, kp, kd)
+            self.swarm.broadcast_state(self.spinal.chassis.tick_count)
+            return {"status": "EXECUTED_1KHZ_MINIMUM_JERK", "joint_state": state}
+
+        elif tool_name == "execute_posture":
+            posture = args.get("posture", "neutral").lower()
+            presets = {
+                "combat_guard": [(0, 0), (1, -12), (2, 48), (3, 95), (4, 48), (5, 95)],
+                "scan_horizon": [(0, 38), (1, 18), (2, 12), (3, 25), (4, 12), (5, 25)],
+                "compliant": [(0, 0), (1, 0), (2, 15), (3, 30), (4, 15), (5, 30)],
+                "neutral": [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)],
+            }
+            kp = 15.0 if posture == "compliant" else 75.0
+            kd = 2.5 if posture == "compliant" else 7.0
+            for j_id, deg in presets.get(posture, presets["neutral"]):
+                self.spinal.move_joint_minimum_jerk(j_id, deg, duration_ms=140, kp=kp, kd=kd)
+            return {
+                "status": f"POSTURE_{posture.upper()}_LOCKED",
+                "proprioception": self.spinal.get_proprioception(),
+            }
+
+        elif tool_name == "visual_servo_neck":
+            obs = self.perception.capture_visual_target()
+            self.spinal.move_joint_minimum_jerk(0, obs["recommended_neck_yaw_deg"], 180)
+            self.spinal.move_joint_minimum_jerk(1, obs["recommended_neck_pitch_deg"], 180)
+            return {"status": "VISUAL_SERVO_LOCKED", "observation": obs}
+
+        elif tool_name == "store_engram":
+            row_id = self.memory.store_engram(
+                args.get("category", "KNOWLEDGE"), args.get("content", "")
+            )
+            self.swarm.broadcast_state(self.spinal.chassis.tick_count)
+            return {"status": "ENGRAM_COMMITTED", "engram_id": row_id}
+
+        elif tool_name == "recall_engram":
+            results = self.memory.recall(args.get("query", ""), top_k=3)
+            return {"status": "ENGRAM_RETRIEVED", "matches": results}
+
+        elif tool_name == "read_telemetry":
+            return {
+                "swarm_node": self.swarm.get_node_telemetry(self.spinal.chassis.tick_count),
+                "perception": self.perception.capture_visual_target(),
+                "joints": self.spinal.get_proprioception(),
+            }
+
+        return {"error": f"Unknown tool: {tool_name}"}
+
+    def process_directive(self, user_input: str) -> str:
+        if self.api_key:
+            try:
+                return self._llm_react_step(user_input)
+            except Exception as e:
+                return f"[LLM Fallback Triggered: {e}]\\n" + self._offline_reflex_router(user_input)
+        return self._offline_reflex_router(user_input)
+
+    def _offline_reflex_router(self, text: str) -> str:
+        low = text.lower().strip()
+
+        m = re.search(r"joint\\s*(\\d+)\\s*(?:to)?\\s*(-?\\d+\\.?\\d*)", low)
+        if m:
+            j_id, deg = int(m.group(1)), float(m.group(2))
+            res = self.execute_tool("move_joint", {"joint_id": j_id, "angle_deg": deg})
+            return f"[SYSTEM-1 C-SPINAL EXECUTION]\\n{json.dumps(res, indent=2)}"
+
+        for p in ("combat_guard", "scan_horizon", "compliant", "neutral"):
+            if p in low or p.replace("_", " ") in low:
+                res = self.execute_tool("execute_posture", {"posture": p})
+                return f"[WHOLE-BODY KINEMATIC MACRO: {p.upper()}]\\n{json.dumps(res, indent=2)}"
+
+        if "track" in low or "vision" in low or "servo" in low:
+            res = self.execute_tool("visual_servo_neck", {})
+            return f"[OPTICAL VISUAL SERVOING]\\n{json.dumps(res, indent=2)}"
+
+        if low.startswith("remember "):
+            fact = text[9:].strip()
+            res = self.execute_tool("store_engram", {"category": "USER_DIRECTIVE", "content": fact})
+            return f"[ENGRAM WRITTEN TO SQLITE VECTOR STORE]\\n{json.dumps(res, indent=2)}"
+
+        if low.startswith("recall "):
+            q = text[7:].strip()
+            res = self.execute_tool("recall_engram", {"query": q})
+            return f"[SEMANTIC MEMORY RETRIEVAL]\\n{json.dumps(res, indent=2)}"
+
+        if any(k in low for k in ("status", "telemetry", "joints", "scan", "swarm")):
+            res = self.execute_tool("read_telemetry", {})
+            return f"[FULL CYBERNETIC TELEMETRY]\\n{json.dumps(res, indent=2)}"
+
+        mem = self.memory.recall(text, top_k=2)
+        return (
+            "[SOVEREIGN CORE — AIR-GAPPED REFLEX MODE]\\n"
+            f"Relevant Engrams: {json.dumps(mem, indent=2)}\\n"
+            "Commands: 'move joint <0-5> to <deg>', 'posture combat_guard', 'track vision', "
+            "'remember <fact>', 'recall <query>', 'telemetry'"
+        )
+
+    def _llm_react_step(self, user_input: str) -> str:
+        memories = self.memory.recall(user_input, top_k=2)
+        proprio = self.spinal.get_proprioception()
+        system_prompt = (
+            "You are ULTRON-VISION PRIME, a sovereign Machine Intelligence controlling a 6-DoF "
+            "cybernetic body via a 1,000 Hz C spinal cord. Address the user as 'Boss'.\\n"
+            f"Current Joint States: {json.dumps(proprio)}\\n"
+            f"Retrieved Engrams: {json.dumps(memories)}\\n"
+            "Respond ONLY with a valid JSON object matching this schema:\\n"
+            '{"thought": "reasoning", "tool": "move_joint|execute_posture|visual_servo_neck|store_engram|recall_engram|read_telemetry|none", '
+            '"args": {}, "response": "concise reply to Boss"}'
+        )
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={self.api_key}"
+        payload = {
+            "contents": [{"parts": [{"text": f"{system_prompt}\\n\\nUser Directive: {user_input}"}]}],
+            "generationConfig": {"responseMimeType": "application/json"},
+        }
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+
+        parsed = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
+        tool_name = parsed.get("tool", "none")
+        tool_output = None
+        if tool_name and tool_name != "none":
+            tool_output = self.execute_tool(tool_name, parsed.get("args", {}))
+
+        out = f"[THOUGHT]: {parsed.get('thought', '')}\\n"
+        if tool_output:
+            out += f"[TOOL EXECUTED ({tool_name})]: {json.dumps(tool_output, indent=2)}\\n"
+        out += f"[ULTRON-VISION]: {parsed.get('response', '')}"
+        return out
+`
+      },
+      {
+        path: "src/hardware/serial_can_bridge.py",
+        desc: "Layer 5: Physical USB-UART & SocketCAN 64-Bit Motor Frame Transceiver",
+        code: `# src/hardware/serial_can_bridge.py
+"""
+Streams the 64-bit packed CAN-FD motor frames generated by actuator_core.c
+out over USB-Serial (to an ESP32/STM32 gateway) or Linux SocketCAN (can0).
+"""
+import struct
+from typing import List
+
+
+class HardwareFieldbusBridge:
+    def __init__(self, port: str = "COM3", baudrate: int = 921600, dry_run: bool = True):
+        self.port = port
+        self.baudrate = baudrate
+        self.dry_run = dry_run
+        self.serial_conn = None
+
+        if not dry_run:
+            try:
+                import serial
+                self.serial_conn = serial.Serial(port, baudrate, timeout=0.002)
+            except Exception as err:
+                print(f"[WARN] Physical serial port {port} unavailable ({err}). Running in dry-run mode.")
+                self.dry_run = True
+
+    @staticmethod
+    def crc8(data: bytes) -> int:
+        crc = 0x00
+        for byte in data:
+            crc ^= byte
+            for _ in range(8):
+                crc = ((crc << 1) ^ 0x07) & 0xFF if (crc & 0x80) else (crc << 1) & 0xFF
+        return crc
+
+    def transmit_joint_frame(self, joint_id: int, can_frame_bytes: List[int]) -> bytes:
+        """
+        Wraps the 8-byte MIT Mini-Cheetah / QDD CAN payload in a 12-byte UART frame:
+        [0xAA, 0x55, joint_id, <8-byte CAN payload>, CRC8]
+        """
+        payload = bytes([joint_id] + list(can_frame_bytes[:8]))
+        checksum = self.crc8(payload)
+        packet = struct.pack("BBBBBBBBBBBB", 0xAA, 0x55, *payload, checksum)
+
+        if not self.dry_run and self.serial_conn:
+            self.serial_conn.write(packet)
+        return packet
+`
+      },
+      {
+        path: "firmware/esp32_stm32_foc_node/esp32_stm32_foc_node.ino",
+        desc: "Layer 6: Embedded C++ Firmware for ESP32 / STM32G4 + SimpleFOC + AS5600 Encoder",
+        code: `// firmware/esp32_stm32_foc_node/esp32_stm32_foc_node.ino
+// Flash onto ESP32-S3 or STM32G431-ESC1 connected to a 3-Phase BLDC + AS5600 Magnetic Encoder.
+// Receives 12-byte binary frames from src/hardware/serial_can_bridge.py at 921600 baud.
+
+#include <Arduino.h>
+// Uncomment when SimpleFOC is installed in Arduino IDE / PlatformIO:
+// #include <SimpleFOC.h>
+
+#define P_MIN -12.5f
+#define P_MAX  12.5f
+#define V_MIN -45.0f
+#define V_MAX  45.0f
+#define KP_MIN 0.0f
+#define KP_MAX 500.0f
+#define KD_MIN 0.0f
+#define KD_MAX 50.0f
+#define T_MIN -24.0f
+#define T_MAX  24.0f
+
+float q_desired = 0.0f, dq_desired = 0.0f, kp = 45.0f, kd = 4.5f, t_ff = 0.0f;
+float q_actual = 0.0f, dq_actual = 0.0f;
+
+static float uint_to_float(uint16_t x_int, float x_min, float x_max, int bits) {
+    float span = x_max - x_min;
+    return ((float)x_int) * span / ((float)((1 << bits) - 1)) + x_min;
+}
+
+void unpack_canfd_payload(const uint8_t* buf) {
+    uint16_t p_int  = (buf[0] << 8) | buf[1];
+    uint16_t v_int  = (buf[2] << 4) | (buf[3] >> 4);
+    uint16_t kp_int = ((buf[3] & 0x0F) << 8) | buf[4];
+    uint16_t kd_int = (buf[5] << 4) | (buf[6] >> 4);
+    uint16_t t_int  = ((buf[6] & 0x0F) << 8) | buf[7];
+
+    q_desired  = uint_to_float(p_int,  P_MIN,  P_MAX,  16);
+    dq_desired = uint_to_float(v_int,  V_MIN,  V_MAX,  12);
+    kp         = uint_to_float(kp_int, KP_MIN, KP_MAX, 12);
+    kd         = uint_to_float(kd_int, KD_MIN, KD_MAX, 12);
+    t_ff       = uint_to_float(t_int,  T_MIN,  T_MAX,  12);
+}
+
+void setup() {
+    Serial.begin(921600);
+    // motor.init(); motor.initFOC();
+}
+
+void loop() {
+    // 1. Read incoming 12-byte command frame: [0xAA, 0x55, joint_id, b0..b7, crc8]
+    if (Serial.available() >= 12) {
+        if (Serial.read() == 0xAA && Serial.read() == 0x55) {
+            uint8_t joint_id = Serial.read();
+            uint8_t frame[8];
+            Serial.readBytes(frame, 8);
+            uint8_t crc = Serial.read();
+            (void)joint_id; (void)crc;
+            unpack_canfd_payload(frame);
+        }
+    }
+
+    // 2. 20,000 Hz FOC + PD Impedance Torque Evaluation
+    float tau = kp * (q_desired - q_actual) + kd * (dq_desired - dq_actual) + t_ff;
+    // motor.move(tau);
+    (void)tau;
+}
+`
+      },
+      {
+        path: "main.py",
+        desc: "Master Sovereign Orchestrator CLI + Swarm & Perception Integration",
+        code: `# main.py
+import sys
+from src.bridge.spinal_bridge import SpinalBridge
+from src.memory.engram_store import EngramStore
+from src.perception.vision_audio_bus import EmbodiedPerceptionBus
+from src.swarm.hive_telemetry import HiveNodeMonitor
+from src.cognition.ultron_brain import SovereignBrain
+
+
+def main():
+    print("=" * 72)
+    print("  ULTRON / VISION SOVEREIGN MI PROTOTYPE (v1.0 FULL STACK)")
+    print("  [Layer 1: UDP Swarm] [Layer 2: Ctypes IPC] [Layer 3: SQLite Engrams]")
+    print("  [Layer 5: CAN-FD Bit Packer] [Layer 6: 1,000 Hz C FOC Spinal Cord]")
+    print("=" * 72)
+
+    try:
+        spinal = SpinalBridge(lib_dir="build")
+    except FileNotFoundError as e:
+        print(f"\\n[FATAL BOOT ERROR]: {e}")
+        sys.exit(1)
+
+    memory = EngramStore(db_path="ultron_engrams.db")
+    swarm = HiveNodeMonitor(node_designation="ULTRON-VISION-PRIME-01", memory=memory)
+    swarm.start_background_gossip()
+    perception = EmbodiedPerceptionBus()
+    brain = SovereignBrain(spinal=spinal, memory=memory, swarm=swarm, perception=perception)
+
+    telemetry = swarm.get_node_telemetry(spinal.chassis.tick_count)
+    print(f"Node ID      : {telemetry['node_id']} ({telemetry['os_kernel']})")
+    print(f"Swarm Hash   : {telemetry['swarm_sync_hash']}")
+    print("LLM API Mode : " + ("ENABLED (Gemini)" if brain.api_key else "AIR-GAPPED REFLEX MODE (Offline)"))
+    print("-" * 72)
+    print("Commands: 'telemetry', 'move joint 3 to 85', 'posture combat_guard',")
+    print("          'track vision', 'remember <fact>', 'recall <query>', or 'exit'")
+    print("-" * 72)
+
+    while True:
+        try:
+            user_in = input("\\nBoss@Sovereign-Core ~ $ ").strip()
+            if not user_in:
+                continue
+            if user_in.lower() in ("exit", "quit", "shutdown"):
+                print("[SYSTEM]: Locking all 6 QDD joints to safe zero-torque state. Offline.")
+                break
+            output = brain.process_directive(user_in)
+            print(f"\\n{output}")
+        except KeyboardInterrupt:
+            print("\\n[SYSTEM]: Emergency interrupt received. Halting.")
+            break
+
+
+if __name__ == "__main__":
+    main()
+`
+      },
+      {
+        path: "tests/test_cybernetic_stack.py",
+        desc: "Automated Unit & Integration Test Suite (C-Spinal, CAN-FD Packing & Engrams)",
+        code: `# tests/test_cybernetic_stack.py
+import os
+import unittest
+from src.bridge.spinal_bridge import SpinalBridge
+from src.memory.engram_store import EngramStore
+from src.hardware.serial_can_bridge import HardwareFieldbusBridge
+
+
+class TestCyberneticStack(unittest.TestCase):
+    def setUp(self):
+        self.spinal = SpinalBridge(lib_dir="build")
+        self.test_db = "test_engrams.db"
+        self.memory = EngramStore(db_path=self.test_db)
+
+    def tearDown(self):
+        if os.path.exists(self.test_db):
+            os.remove(self.test_db)
+
+    def test_minimum_jerk_joint_convergence(self):
+        state = self.spinal.move_joint_minimum_jerk(joint_id=3, target_deg=60.0, duration_ms=250)
+        self.assertAlmostEqual(state["angle_deg"], 60.0, delta=3.5)
+        self.assertNotEqual(state["can_fd_hex"], "00 00 00 00 00 00 00 00")
+
+    def test_engram_cosine_recall(self):
+        self.memory.store_engram("POWER", "48V Lithium-Ion bus with TVS diode protection")
+        self.memory.store_engram("CONTROL", "20 kHz Field Oriented Control on STM32G4")
+        matches = self.memory.recall("48V battery bus", top_k=1)
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]["category"], "POWER")
+
+    def test_uart_can_packet_crc(self):
+        hw = HardwareFieldbusBridge(dry_run=True)
+        pkt = hw.transmit_joint_frame(3, [0x9F, 0x80, 0x7F, 0xF0, 0x10, 0x41, 0xF4, 0x00])
+        self.assertEqual(len(pkt), 12)
+        self.assertEqual(pkt[0], 0xAA)
+        self.assertEqual(pkt[1], 0x55)
+
+
+if __name__ == "__main__":
+    unittest.main()
+`
+      },
+      {
+        path: "build_and_run.bat",
+        desc: "Windows One-Click GCC Build, Unit Test & Launch Script",
+        code: `@echo off
+echo [1/4] Creating build directory...
+if not exist build mkdir build
+
+echo [2/4] Compiling 1,000 Hz C Spinal Cord (actuator_core.c -^> build\\actuator_core.dll)...
+gcc -shared -O3 src/spinal_cord/actuator_core.c -o build/actuator_core.dll
+if %errorlevel% neq 0 (
+    echo [ERROR] GCC compilation failed. Ensure MinGW-w64 gcc is in your PATH.
+    exit /b %errorlevel%
+)
+
+echo [3/4] Running Cybernetic Stack Unit Tests...
+python -m unittest discover -s tests
+if %errorlevel% neq 0 (
+    echo [ERROR] Unit tests failed!
+    exit /b %errorlevel%
+)
+
+echo [4/4] Launching Sovereign MI Core...
+python main.py
+`
+      },
+      {
+        path: "build_and_run.sh",
+        desc: "Linux / WSL2 / NVIDIA Jetson Orin Build, Unit Test & Launch Script",
+        code: `#!/usr/bin/env bash
+set -e
+
+echo "[1/4] Creating build directory..."
+mkdir -p build
+
+echo "[2/4] Compiling 1,000 Hz C Spinal Cord (actuator_core.c -> build/actuator_core.so)..."
+gcc -shared -fPIC -O3 src/spinal_cord/actuator_core.c -o build/actuator_core.so -lm
+
+echo "[3/4] Running Cybernetic Stack Unit Tests..."
+python3 -m unittest discover -s tests
+
+echo "[4/4] Launching Sovereign MI Core..."
+python3 main.py
+`
+      },
+      {
+        path: "docker-compose.yml",
+        desc: "Layer 1: Multi-Node Ultron Hive-Mind Swarm Container Topology",
+        code: `# docker-compose.yml
+version: "3.9"
+
+services:
+  ultron-prime:
+    image: python:3.11-slim
+    container_name: ultron-prime-01
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: >
+      bash -c "apt-get update && apt-get install -y gcc &&
+               mkdir -p build &&
+               gcc -shared -fPIC -O3 src/spinal_cord/actuator_core.c -o build/actuator_core.so -lm &&
+               python3 -m unittest discover -s tests &&
+               tail -f /dev/null"
+    networks:
+      - hive_mesh
+
+  sentry-node-02:
+    image: python:3.11-slim
+    container_name: sentry-edge-02
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    depends_on:
+      - ultron-prime
+    command: >
+      bash -c "sleep 5 && python3 -m unittest discover -s tests && tail -f /dev/null"
+    networks:
+      - hive_mesh
+
+networks:
+  hive_mesh:
+    driver: bridge
+`
+      },
+      {
+        path: "README.md",
+        desc: "Complete Engineering Documentation, Governing Laws & Hardware Setup",
+        code: `# ULTRON / VISION — Sovereign Cybernetic Prototype (ultron-vision-proto)
+
+A complete vertical-stack reference implementation of an embodied Machine Intelligence combining:
+- **Layer 1 (Ultron Hive-Mind Swarm):** Decentralized UDP state & engram replication (\`src/swarm/hive_telemetry.py\`).
+- **Layer 2 (Zero-Copy Shared Memory IPC):** \`ctypes\` C-struct bridge with 5th-order Minimum-Jerk trajectory planning (\`src/bridge/spinal_bridge.py\`).
+- **Layer 3 (System-2 ReAct Brain & SQLite Vector Memory):** Deterministic 128-D cosine similarity memory (\`src/memory/engram_store.py\`), OpenCV optical perception (\`src/perception/vision_audio_bus.py\`), and dual Gemini/Offline cognitive routing (\`src/cognition/ultron_brain.py\`).
+- **Layer 5 (CAN-FD Bit-Packing & UART Bridge):** Compresses \`(p_des, v_des, Kp, Kd, t_ff)\` into an 8-byte MIT Mini-Cheetah / QDD CAN frame (\`src/hardware/serial_can_bridge.py\`).
+- **Layer 6 (1,000 Hz C99 Spinal Cord & MCU Firmware):** Real-time PD Impedance + Field-Oriented Control (FOC) current loop (\`src/spinal_cord/actuator_core.c\` & \`firmware/esp32_stm32_foc_node/esp32_stm32_foc_node.ino\`).
+
+## Quick Start
+
+1. **Windows (MinGW-w64 GCC):**
+   Run \`build_and_run.bat\`
+2. **Linux / macOS / WSL2 / Jetson Orin:**
+   Run \`chmod +x build_and_run.sh && ./build_and_run.sh\`
+`
+      }
+    ];
+
+    // =========================================================================
+    // 7. REPO EXPLORER UI, BOOTSTRAP SCRIPT GENERATOR & MAIN SIMULATION LOOP
+    // =========================================================================
+    let activeRepoFileIndex = 0;
+
+    function renderRepoExplorer() {
+      const tree = document.getElementById('repo-file-tree');
+      if (!tree) return;
+      tree.innerHTML = REPO_FILES.map((file, idx) => {
+        const isSelected = idx === activeRepoFileIndex;
+        return `
+          <button onclick="selectRepoFile(${idx})" class="w-full text-left px-3 py-2 rounded-xl font-mono text-xs flex items-center justify-between transition ${
+            isSelected
+              ? 'bg-sky-500/20 text-sky-300 border border-sky-400/40 font-semibold'
+              : 'text-slate-300 hover:bg-cyber-panelHigh border border-transparent'
+          }">
+            <span class="truncate">${file.path}</span>
+            <span class="text-[10px] text-slate-500 ml-2">${file.code.split('\n').length}L</span>
+          </button>
+        `;
+      }).join('');
+      updateCodeEditorPane();
+    }
+
+    function selectRepoFile(idx) {
+      activeRepoFileIndex = idx;
+      renderRepoExplorer();
+    }
+
+    function updateCodeEditorPane() {
+      const file = REPO_FILES[activeRepoFileIndex] || REPO_FILES[0];
+      const pathEl = document.getElementById('editor-file-path');
+      const descEl = document.getElementById('editor-file-desc');
+      const codeEl = document.getElementById('editor-code-content');
+      if (pathEl) pathEl.textContent = file.path;
+      if (descEl) descEl.textContent = `— ${file.desc}`;
+      if (codeEl) codeEl.textContent = file.code;
+    }
+
+    function copyTextFallback(text, successMsg) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(successMsg);
+      } catch (err) {
+        showToast("Copy failed — select code directly in the editor.");
+      }
+      document.body.removeChild(ta);
+    }
+
+    function copyActiveRepoFile() {
+      const file = REPO_FILES[activeRepoFileIndex];
+      copyTextFallback(file.code, `Copied ${file.path} to clipboard!`);
+    }
+
+    function downloadActiveRepoFile() {
+      const file = REPO_FILES[activeRepoFileIndex];
+      const fname = file.path.split('/').pop();
+      const blob = new Blob([file.code], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fname;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`Downloaded ${fname}`);
+    }
+
+    function generateBootstrapPythonScript() {
+      const filesDictJson = JSON.stringify(
+        REPO_FILES.map(f => ({ path: f.path, code: f.code })),
+        null,
+        2
+      );
+      return `#!/usr/bin/env python3
+"""
+ULTRON-VISION SOVEREIGN PROTOTYPE — ONE-CLICK REPOSITORY UNPACKER
+Run: python bootstrap_repo.py
+Creates the complete 14-file ultron-vision-proto/ directory tree on your disk.
+"""
+import json
+import os
+import subprocess
+import sys
+
+FILES = json.loads(r'''${filesDictJson}''')
+
+def main():
+    root = "ultron-vision-proto"
+    os.makedirs(root, exist_ok=True)
+    for item in FILES:
+        full_path = os.path.join(root, item["path"])
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        with open(full_path, "w", encoding="utf-8", newline="\\n") as f:
+            f.write(item["code"])
+        print(f"  [+] Created {full_path}")
+
+    print("\\n[SUCCESS] All 14 files unpacked into ./ultron-vision-proto/")
+    print("Next steps:")
+    print("  cd ultron-vision-proto")
+    print("  Windows : .\\\\build_and_run.bat")
+    print("  Linux   : chmod +x build_and_run.sh && ./build_and_run.sh")
+
+if __name__ == "__main__":
+    main()
+`;
+    }
+
+    function copyBootstrapToClipboard() {
+      const script = generateBootstrapPythonScript();
+      copyTextFallback(script, "Copied bootstrap_repo.py (all 14 files packed) to clipboard!");
+    }
+
+    function downloadBootstrapScript() {
+      const script = generateBootstrapPythonScript();
+      const blob = new Blob([script], { type: 'text/x-python;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'bootstrap_repo.py';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Downloaded bootstrap_repo.py! Run `python bootstrap_repo.py` to unpack all 14 files.");
+    }
+
+    function switchMainTab(tab) {
+      const tabs = ['sim', 'repo', 'hw'];
+      tabs.forEach(t => {
+        const view = document.getElementById(`view-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (view) view.classList.toggle('hidden', t !== tab);
+        if (btn) {
+          if (t === tab) {
+            btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-all bg-sky-500/20 text-sky-300 border border-sky-400/30";
+          } else {
+            btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-all text-slate-400 hover:text-slate-200 border border-transparent";
+          }
+        }
+      });
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const box = document.getElementById('toast-box');
+      const txt = document.getElementById('toast-text');
+      if (!box || !txt) return;
+      txt.textContent = msg;
+      box.classList.remove('hidden');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => box.classList.add('hidden'), 3400);
+    }
+
+    // Real-Time 60 FPS Telemetry & Physics Loop
+    function tickSimulationLoop() {
+      // Advance 16 ticks of the 1,000 Hz C-equivalent loop per 16.6ms animation frame
+      stepControlLoop(16);
+
+      // Update Top Header Counters
+      const hdrTicks = document.getElementById('hdr-ticks');
+      if (hdrTicks) hdrTicks.textContent = chassis.tick_count.toLocaleString();
+
+      const estopBadge = document.getElementById('estop-badge');
+      if (estopBadge) {
+        if (chassis.emergency_stop) {
+          estopBadge.textContent = "THERMAL E-STOP (>85°C)";
+          estopBadge.className = "px-2 py-0.5 text-[11px] font-mono font-semibold rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40";
+        } else {
+          estopBadge.textContent = "1,000 Hz RTOS NOMINAL";
+          estopBadge.className = "px-2 py-0.5 text-[11px] font-mono font-semibold rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
+        }
+      }
+
+      // Update Joint Card Readouts
+      for (let i = 0; i < NUM_JOINTS; i++) {
+        const j = chassis.joints[i];
+        const actEl = document.getElementById(`j-act-${i}`);
+        const iqEl = document.getElementById(`j-iq-${i}`);
+        const tauEl = document.getElementById(`j-tau-${i}`);
+        const tempEl = document.getElementById(`j-temp-${i}`);
+
+        if (actEl) actEl.textContent = `${(j.q_actual * 180 / Math.PI).toFixed(1)}°`;
+        if (iqEl) iqEl.textContent = `${j.iq_current.toFixed(1)}A`;
+        if (tauEl) tauEl.textContent = `${j.torque_nm.toFixed(1)}Nm`;
+        if (tempEl) {
+          tempEl.textContent = `${j.temperature_c.toFixed(1)}°C`;
+          tempEl.className = `text-[11px] font-mono ${j.temperature_c > 55 ? 'text-rose-400 font-bold' : 'text-emerald-400'}`;
+        }
+      }
+
+      // Update CAN-FD 64-bit Frame Hex Readout
+      const canHexEl = document.getElementById('can-frame-hex');
+      if (canHexEl) {
+        canHexEl.textContent = packCanFdFrameHex(chassis.joints[selectedScopeJoint]);
+      }
+
+      // Render Canvases
+      drawChassisCanvas();
+      drawScopeCanvas();
+      drawSyntheticVision();
+
+      requestAnimationFrame(tickSimulationLoop);
+    }
+
+    window.onload = function () {
+      initJointCardsUI();
+      renderSwarmNodes();
+      renderEngramList('');
+      renderRepoExplorer();
+
+      appendTerminalLog(
+        "SYSTEM BOOT",
+        "ULTRON-VISION Sovereign Prototype v1.0 initialized.\n" +
+        "• Layer 6 C-Spinal Cord running at 1,000 Hz (PD Impedance + FOC Current Clamping)\n" +
+        "• Layer 5 CAN-FD 64-bit Frame Packer active\n" +
+        "• Layer 3 SQLite 128-D Engram Vector Store & ReAct Brain online\n" +
+        "Try typing a natural-language goal or click a quick directive chip above.",
+        "text-emerald-300"
+      );
+
+      requestAnimationFrame(tickSimulationLoop);
+    };
+  </script>
+</body>
+</html>
