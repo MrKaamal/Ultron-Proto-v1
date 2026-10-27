@@ -1,0 +1,5 @@
+# Core prototype runs on 100% Python Standard Library + compiled C99 (Zero pip bloat)
+# Optional future expansion packages:
+# opencv-python>=4.10.0
+# faster-whisper>=1.0.3
+# pyserial>=3.5
