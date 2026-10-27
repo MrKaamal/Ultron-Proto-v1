@@ -1,0 +1,89 @@
+# src/bridge/spinal_bridge.py
+import ctypes
+import math
+import os
+import platform
+from typing import Dict, List
+
+
+class JointState(ctypes.Structure):
+    _fields_ = [
+        ("joint_id", ctypes.c_int),
+        ("name", ctypes.c_char * 24),
+        ("q_actual", ctypes.c_float),
+        ("dq_actual", ctypes.c_float),
+        ("q_desired", ctypes.c_float),
+        ("dq_desired", ctypes.c_float),
+        ("kp", ctypes.c_float),
+        ("kd", ctypes.c_float),
+        ("iq_current", ctypes.c_float),
+        ("torque_nm", ctypes.c_float),
+        ("temperature_c", ctypes.c_float),
+    ]
+
+
+class CyberneticChassis(ctypes.Structure):
+    _fields_ = [
+        ("joints", JointState * 6),
+        ("tick_count", ctypes.c_ulonglong),
+        ("emergency_stop", ctypes.c_int),
+    ]
+
+
+class SpinalBridge:
+    def __init__(self, lib_dir: str = "build"):
+        ext = ".dll" if platform.system() == "Windows" else ".so"
+        lib_path = os.path.abspath(os.path.join(lib_dir, f"actuator_core{ext}"))
+
+        if not os.path.exists(lib_path):
+            raise FileNotFoundError(
+                f"Compiled C spinal cord not found at {lib_path}. "
+                "Compile src/spinal_cord/actuator_core.c with GCC first."
+            )
+
+        self.lib = ctypes.CDLL(lib_path)
+
+        # Configure C function signatures
+        self.lib.init_chassis.argtypes = [ctypes.POINTER(CyberneticChassis)]
+        self.lib.set_joint_command.argtypes = [
+            ctypes.POINTER(CyberneticChassis),
+            ctypes.c_int,
+            ctypes.c_float,
+            ctypes.c_float,
+            ctypes.c_float,
+        ]
+        self.lib.step_control_loop.argtypes = [
+            ctypes.POINTER(CyberneticChassis),
+            ctypes.c_int,
+        ]
+
+        self.chassis = CyberneticChassis()
+        self.lib.init_chassis(ctypes.byref(self.chassis))
+
+    def move_joint_deg(
+        self, joint_id: int, angle_deg: float, kp: float = 65.0, kd: float = 6.5, settle_ms: int = 350
+    ) -> Dict:
+        """Commands a joint in degrees and steps the 1,000 Hz C loop for `settle_ms` ticks."""
+        angle_rad = math.radians(angle_deg)
+        self.lib.set_joint_command(
+            ctypes.byref(self.chassis), joint_id, angle_rad, kp, kd
+        )
+        self.lib.step_control_loop(ctypes.byref(self.chassis), settle_ms)
+        return self.get_proprioception()[joint_id]
+
+    def get_proprioception(self) -> List[Dict]:
+        """Reads real-time proprioceptive state (q_t, dq_t, current, temp) from C memory."""
+        states = []
+        for i in range(6):
+            j = self.chassis.joints[i]
+            states.append({
+                "joint_id": j.joint_id,
+                "name": j.name.decode("utf-8"),
+                "angle_deg": round(math.degrees(j.q_actual), 2),
+                "target_deg": round(math.degrees(j.q_desired), 2),
+                "velocity_deg_s": round(math.degrees(j.dq_actual), 2),
+                "iq_current_a": round(j.iq_current, 2),
+                "torque_nm": round(j.torque_nm, 2),
+                "temp_c": round(j.temperature_c, 2),
+            })
+        return states
