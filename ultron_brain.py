@@ -5,9 +5,9 @@ import re
 import urllib.request
 from typing import Any, Dict
 
-from src.bridge.spinal_bridge import SpinalBridge
-from src.memory.engram_store import EngramStore
-from src.swarm.hive_telemetry import HiveNodeMonitor
+from engram_store import SpinalBridge
+from hive_telemetry import EngramStore
+from spinal_bridge import HiveNodeMonitor
 
 
 class SovereignBrain:

@@ -1,9 +1,9 @@
 # main.py
 import sys
-from src.bridge.spinal_bridge import SpinalBridge
-from src.memory.engram_store import EngramStore
-from src.swarm.hive_telemetry import HiveNodeMonitor
-from src.cognition.ultron_brain import SovereignBrain
+from engram_store import SpinalBridge
+from hive_telemetry import EngramStore
+from spinal_bridge import HiveNodeMonitor
+from ultron_brain import SovereignBrain
 
 
 def main():

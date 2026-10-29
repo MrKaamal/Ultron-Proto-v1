@@ -637,7 +637,7 @@ class EngramStore:
             )
             conn.commit()
           
-def _embed_text(self, text: str) -> List[float]:
+    def _embed_text(self, text: str) -> List[float]:
         vec = [0.0] * self.dim
         tokens = text.lower().split()
         for token in tokens:
@@ -779,7 +779,8 @@ class HiveNodeMonitor:
             pass
         finally:
             sock.close()
-          def _embed_text(self, text: str) -> List[float]:
+
+    def _embed_text(self, text: str) -> List[float]:
         vec = [0.0] * self.dim
         tokens = text.lower().split()
         for token in tokens:
@@ -921,7 +922,7 @@ class HiveNodeMonitor:
             pass
         finally:
             sock.close()
-          class EmbodiedPerceptionBus:
+class EmbodiedPerceptionBus:
     """
     Captures visual target coordinates from a live OpenCV webcam (if installed)
     or generates a synthetic RGB-D / LiDAR target trajectory for neck visual servoing.
