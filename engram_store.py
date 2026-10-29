@@ -3,6 +3,7 @@ import ctypes
 import math
 import os
 import platform
+import subprocess
 from typing import Dict, List
 
 
@@ -36,10 +37,7 @@ class SpinalBridge:
         lib_path = os.path.abspath(os.path.join(lib_dir, f"actuator_core{ext}"))
 
         if not os.path.exists(lib_path):
-            raise FileNotFoundError(
-                f"Compiled C spinal cord not found at {lib_path}. "
-                "Compile src/spinal_cord/actuator_core.c with GCC first."
-            )
+            self._compile_library(lib_path)
 
         self.lib = ctypes.CDLL(lib_path)
 
@@ -59,6 +57,32 @@ class SpinalBridge:
 
         self.chassis = CyberneticChassis()
         self.lib.init_chassis(ctypes.byref(self.chassis))
+
+    def _compile_library(self, lib_path: str) -> None:
+        source_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "actuator_core.c"))
+        if not os.path.exists(source_path):
+            raise FileNotFoundError(
+                f"C spinal source file missing at {source_path}. "
+                "Restore actuator_core.c before starting Ultron."
+            )
+
+        os.makedirs(os.path.dirname(lib_path), exist_ok=True)
+        compile_cmd = ["gcc", "-shared", "-O3", source_path, "-o", lib_path]
+        if platform.system() != "Windows":
+            compile_cmd.insert(1, "-fPIC")
+
+        try:
+            result = subprocess.run(compile_cmd, capture_output=True, text=True, check=False)
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(
+                "GCC compiler was not found in PATH, so the C spinal library could not be built."
+            ) from exc
+
+        if result.returncode != 0:
+            err = result.stderr.strip() or result.stdout.strip() or "Unknown compiler error."
+            raise FileNotFoundError(
+                f"Failed to compile C spinal library at {lib_path}. Compiler output: {err}"
+            )
 
     def move_joint_deg(
         self, joint_id: int, angle_deg: float, kp: float = 65.0, kd: float = 6.5, settle_ms: int = 350

@@ -1,22 +1,21 @@
 # Ultron-Proto-v1
-A small, safe, offline-first assistant prototype inspired by a personal command center. It uses only Python's standard library and stores memory locally in .ultron_memory.json.
 
-Run
-python main.py --offline
-Then try:
+Offline Ultron-inspired prototype with:
+- Python command core (`main.py`, `ultron_brain.py`)
+- C motor/spinal simulation (`actuator_core.c`)
+- Local SQLite engram memory
 
-/help
-/status
-/remember project: build a voice interface
-/recall
-/calc (12 * 4) + 3
-/quit
-Natural-language shortcuts such as what time is it, show status, and remember that ... are supported. The prototype never executes arbitrary shell commands.
+## Run
+```bash
+python main.py
+```
 
-Test
-python -m unittest discover -s tests -v
-Layout
-main.py - command-line entry point
-ultron/assistant.py - routing and assistant behavior
-ultron/memory.py - local JSON memory store
-tests/ - standard-library unit tests
+On first boot, the app auto-compiles `actuator_core.c` into `build/actuator_core.so` (or `.dll` on Windows) using `gcc`.
+
+## Example commands
+- `telemetry`
+- `move joint 3 to 85`
+- `posture combat_guard`
+- `remember Vibranium chassis nominal`
+- `recall chassis`
+- `exit`
