@@ -2327,7 +2327,6 @@ class SovereignBrain:
             res = self.execute_tool(
                 "store_engram", {"category": "USER_DIRECTIVE", "content": fact}
             )
-            return f"[ENGRAM WRITTEN TO SQLITE VECTOR STORE]\n{json.dumps(res, indent=2)}"
 
         # 13. Recall memory engram
         if low.startswith("recall "):
@@ -2364,8 +2363,6 @@ class SovereignBrain:
             "  • push impact                 (injects kinetic disturbance & tests PD recovery)\n"
             "  • remember <fact> / recall <q>(128-D SQLite cosine vector memory)"
         )
-            return f"[ENGRAM WRITTEN TO SQLITE VECTOR STORE]\n{json.dumps(res, indent=2)}"
-
         # 6. Recall memory engram
         if low.startswith("recall "):
             q = text[7:].strip()
