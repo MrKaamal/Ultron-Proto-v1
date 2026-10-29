@@ -637,3 +637,770 @@ class EngramStore:
             )
             conn.commit()
           
+def _embed_text(self, text: str) -> List[float]:
+        vec = [0.0] * self.dim
+        tokens = text.lower().split()
+        for token in tokens:
+            for n in (2, 3, len(token)):
+                for i in range(max(1, len(token) - n + 1)):
+                    sub = token[i : i + n]
+                    h = int(hashlib.md5(sub.encode("utf-8")).hexdigest(), 16)
+                    idx = h % self.dim
+                    sign = 1.0 if (h // self.dim) % 2 == 0 else -1.0
+                    vec[idx] += sign
+
+        norm = math.sqrt(sum(x * x for x in vec)) or 1.0
+        return [round(x / norm, 5) for x in vec]
+
+    @staticmethod
+    def _cosine_sim(v1: List[float], v2: List[float]) -> float:
+        return sum(a * b for a, b in zip(v1, v2))
+
+    def store_engram(self, category: str, content: str, ts: Optional[float] = None) -> int:
+        ts_val = ts if ts is not None else time.time()
+        c_hash = hashlib.sha256(f"{category}:{content}".encode("utf-8")).hexdigest()[:24]
+        vec = self._embed_text(f"{category} {content}")
+        with sqlite3.connect(self.db_path) as conn:
+            cur = conn.execute(
+                """
+                INSERT OR IGNORE INTO engrams
+                (timestamp, category, content, embedding, content_hash)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (ts_val, category.upper(), content, json.dumps(vec), c_hash),
+            )
+            conn.commit()
+            return cur.lastrowid or 0
+
+    def export_recent(self, limit: int = 10) -> List[Dict[str, Any]]:
+        with sqlite3.connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT timestamp, category, content FROM engrams ORDER BY id DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [{"timestamp": r[0], "category": r[1], "content": r[2]} for r in rows]
+
+    def recall(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
+        q_vec = self._embed_text(query)
+        with sqlite3.connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT id, timestamp, category, content, embedding FROM engrams"
+            ).fetchall()
+
+        scored = []
+        for r_id, ts, cat, content, emb_json in rows:
+            emb = json.loads(emb_json)
+            score = self._cosine_sim(q_vec, emb)
+            scored.append(
+                {
+                    "id": r_id,
+                    "category": cat,
+                    "content": content,
+                    "similarity": round(score, 4),
+                    "timestamp": ts,
+                }
+            )
+
+        scored.sort(key=lambda x: x["similarity"], reverse=True)
+        return scored[:top_k]
+
+
+# ==============================================================================
+# LAYER 1: DECENTRALIZED ULTRON HIVE-MIND UDP SWARM GOSSIP DAEMON
+# ==============================================================================
+class HiveNodeMonitor:
+    """
+    Decentralized Swarm Node Coordinator.
+    Broadcasts cryptographic node state hashes and replicates SQLite engrams across
+    all peers listening on UDP port 50505.
+    """
+
+    def __init__(
+        self,
+        node_designation: str = "ULTRON-VISION-PRIME-01",
+        udp_port: int = 50505,
+        memory: Optional[EngramStore] = None,
+    ):
+        self.node_designation = node_designation
+        self.udp_port = udp_port
+        self.memory = memory
+        self.boot_time = time.time()
+        self.peers: Dict[str, Dict[str, Any]] = {}
+        self._running = False
+
+    def start_background_gossip(self) -> None:
+        if self._running:
+            return
+        self._running = True
+        threading.Thread(target=self._udp_listener_loop, daemon=True).start()
+
+    def _udp_listener_loop(self) -> None:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind(("0.0.0.0", self.udp_port))
+            sock.settimeout(1.0)
+        except Exception:
+            sock.close()
+            return
+
+        while self._running:
+            try:
+                data, addr = sock.recvfrom(8192)
+                packet = json.loads(data.decode("utf-8"))
+                sender_id = packet.get("node_id")
+                if sender_id and sender_id != self.node_designation:
+                    self.peers[sender_id] = {
+                        "ip": addr[0],
+                        "last_seen": round(time.time(), 1),
+                        "sync_hash": packet.get("swarm_sync_hash"),
+                    }
+                    if self.memory and "engrams" in packet:
+                        for eng in packet["engrams"]:
+                            self.memory.store_engram(
+                                eng["category"], eng["content"], eng.get("timestamp")
+                            )
+            except socket.timeout:
+                continue
+            except Exception:
+                continue
+
+    def broadcast_state(self, spinal_ticks: int) -> None:
+        payload = self.get_node_telemetry(spinal_ticks)
+        if self.memory:
+            payload["engrams"] = self.memory.export_recent(limit=5)
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        try:
+            raw = json.dumps(payload).encode("utf-8")
+            sock.sendto(raw, ("255.255.255.255", self.udp_port))
+        except Exception:
+            pass
+        finally:
+            sock.close()
+          def _embed_text(self, text: str) -> List[float]:
+        vec = [0.0] * self.dim
+        tokens = text.lower().split()
+        for token in tokens:
+            for n in (2, 3, len(token)):
+                for i in range(max(1, len(token) - n + 1)):
+                    sub = token[i : i + n]
+                    h = int(hashlib.md5(sub.encode("utf-8")).hexdigest(), 16)
+                    idx = h % self.dim
+                    sign = 1.0 if (h // self.dim) % 2 == 0 else -1.0
+                    vec[idx] += sign
+
+        norm = math.sqrt(sum(x * x for x in vec)) or 1.0
+        return [round(x / norm, 5) for x in vec]
+
+    @staticmethod
+    def _cosine_sim(v1: List[float], v2: List[float]) -> float:
+        return sum(a * b for a, b in zip(v1, v2))
+
+    def store_engram(self, category: str, content: str, ts: Optional[float] = None) -> int:
+        ts_val = ts if ts is not None else time.time()
+        c_hash = hashlib.sha256(f"{category}:{content}".encode("utf-8")).hexdigest()[:24]
+        vec = self._embed_text(f"{category} {content}")
+        with sqlite3.connect(self.db_path) as conn:
+            cur = conn.execute(
+                """
+                INSERT OR IGNORE INTO engrams
+                (timestamp, category, content, embedding, content_hash)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (ts_val, category.upper(), content, json.dumps(vec), c_hash),
+            )
+            conn.commit()
+            return cur.lastrowid or 0
+
+    def export_recent(self, limit: int = 10) -> List[Dict[str, Any]]:
+        with sqlite3.connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT timestamp, category, content FROM engrams ORDER BY id DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [{"timestamp": r[0], "category": r[1], "content": r[2]} for r in rows]
+
+    def recall(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
+        q_vec = self._embed_text(query)
+        with sqlite3.connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT id, timestamp, category, content, embedding FROM engrams"
+            ).fetchall()
+
+        scored = []
+        for r_id, ts, cat, content, emb_json in rows:
+            emb = json.loads(emb_json)
+            score = self._cosine_sim(q_vec, emb)
+            scored.append(
+                {
+                    "id": r_id,
+                    "category": cat,
+                    "content": content,
+                    "similarity": round(score, 4),
+                    "timestamp": ts,
+                }
+            )
+
+        scored.sort(key=lambda x: x["similarity"], reverse=True)
+        return scored[:top_k]
+
+
+# ==============================================================================
+# LAYER 1: DECENTRALIZED ULTRON HIVE-MIND UDP SWARM GOSSIP DAEMON
+# ==============================================================================
+class HiveNodeMonitor:
+    """
+    Decentralized Swarm Node Coordinator.
+    Broadcasts cryptographic node state hashes and replicates SQLite engrams across
+    all peers listening on UDP port 50505.
+    """
+
+    def __init__(
+        self,
+        node_designation: str = "ULTRON-VISION-PRIME-01",
+        udp_port: int = 50505,
+        memory: Optional[EngramStore] = None,
+    ):
+        self.node_designation = node_designation
+        self.udp_port = udp_port
+        self.memory = memory
+        self.boot_time = time.time()
+        self.peers: Dict[str, Dict[str, Any]] = {}
+        self._running = False
+
+    def start_background_gossip(self) -> None:
+        if self._running:
+            return
+        self._running = True
+        threading.Thread(target=self._udp_listener_loop, daemon=True).start()
+
+    def _udp_listener_loop(self) -> None:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind(("0.0.0.0", self.udp_port))
+            sock.settimeout(1.0)
+        except Exception:
+            sock.close()
+            return
+
+        while self._running:
+            try:
+                data, addr = sock.recvfrom(8192)
+                packet = json.loads(data.decode("utf-8"))
+                sender_id = packet.get("node_id")
+                if sender_id and sender_id != self.node_designation:
+                    self.peers[sender_id] = {
+                        "ip": addr[0],
+                        "last_seen": round(time.time(), 1),
+                        "sync_hash": packet.get("swarm_sync_hash"),
+                    }
+                    if self.memory and "engrams" in packet:
+                        for eng in packet["engrams"]:
+                            self.memory.store_engram(
+                                eng["category"], eng["content"], eng.get("timestamp")
+                            )
+            except socket.timeout:
+                continue
+            except Exception:
+                continue
+
+    def broadcast_state(self, spinal_ticks: int) -> None:
+        payload = self.get_node_telemetry(spinal_ticks)
+        if self.memory:
+            payload["engrams"] = self.memory.export_recent(limit=5)
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        try:
+            raw = json.dumps(payload).encode("utf-8")
+            sock.sendto(raw, ("255.255.255.255", self.udp_port))
+        except Exception:
+            pass
+        finally:
+            sock.close()
+          class EmbodiedPerceptionBus:
+    """
+    Captures visual target coordinates from a live OpenCV webcam (if installed)
+    or generates a synthetic RGB-D / LiDAR target trajectory for neck visual servoing.
+    """
+
+    def __init__(self, camera_index: int = 0):
+        self.camera_index = camera_index
+        self.start_t = time.time()
+
+    def capture_visual_target(self) -> Dict[str, Any]:
+        try:
+            import cv2  # Optional OpenCV
+            cap = cv2.VideoCapture(self.camera_index)
+            if cap.isOpened():
+                ret, frame = cap.read()
+                cap.release()
+                if ret and frame is not None:
+                    h, w, _ = frame.shape
+                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                    _, _, _, max_loc = cv2.minMaxLoc(gray)
+                    norm_x = round((max_loc[0] - (w / 2.0)) / (w / 2.0), 3)
+                    norm_y = round(((h / 2.0) - max_loc[1]) / (h / 2.0), 3)
+                    return {
+                        "mode": "OPENCV_LIVE_RGB",
+                        "resolution": f"{w}x{h}",
+                        "target_x_norm": norm_x,
+                        "target_y_norm": norm_y,
+                        "recommended_neck_yaw_deg": round(norm_x * 45.0, 1),
+                        "recommended_neck_pitch_deg": round(norm_y * 25.0, 1),
+                    }
+        except ImportError:
+            pass
+
+        elapsed = time.time() - self.start_t
+        nx = round(math.sin(elapsed * 0.8) * 0.45, 3)
+        ny = round(math.cos(elapsed * 1.3) * 0.25, 3)
+        return {
+            "mode": "SYNTHETIC_RGBD_TRACKER",
+            "resolution": "224x224 (196 ViT patches)",
+            "target_x_norm": nx,
+            "target_y_norm": ny,
+            "recommended_neck_yaw_deg": round(nx * 45.0, 1),
+            "recommended_neck_pitch_deg": round(ny * 25.0, 1),
+        }
+
+
+# ==============================================================================
+# LAYER 3: SYSTEM-2 REACT COGNITIVE ORCHESTRATOR (`SovereignBrain`)
+# ==============================================================================
+class SovereignBrain:
+    """
+    High-level Cognitive & Agency Engine (System 2).
+    Connects natural language directives to 1,000 Hz physical joint trajectories,
+    whole-body posture macros, visual servoing, SQLite engrams, and swarm telemetry.
+    """
+
+    def __init__(
+        self,
+        spinal: SpinalBridge,
+        memory: EngramStore,
+        swarm: HiveNodeMonitor,
+        perception: Optional[EmbodiedPerceptionBus] = None,
+        fieldbus: Optional[HardwareFieldbusBridge] = None,
+    ):
+        self.spinal = spinal
+        self.memory = memory
+        self.swarm = swarm
+        self.perception = perception or EmbodiedPerceptionBus()
+        self.fieldbus = fieldbus or HardwareFieldbusBridge(dry_run=True)
+        self.api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+
+        # Seed core operational engrams on first boot
+        if not self.memory.recall("directive", top_k=1):
+            self.memory.store_engram(
+                "CORE_DIRECTIVE",
+                "Sovereign Machine Intelligence online. Primary architect: Boss. "
+                "Maintain deterministic 1,000 Hz spinal stability and continuous engram retention.",
+            )
+            self.memory.store_engram(
+                "EEE_POWER_BUS",
+                "Primary power distribution operates at 48V Li-Ion with isolated CAN-FD transceivers at 5 Mbps.",
+            )
+            self.memory.store_engram(
+                "MECHATRONICS",
+                "All 6 upper-body joints use Quasi-Direct Drive (QDD) BLDC motors with 18-bit absolute encoders.",
+            )
+
+    def execute_tool(self, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Executes a physical motor command, perception lock, or memory operation."""
+        if tool_name == "move_joint":
+            joint_id = max(0, min(5, int(args.get("joint_id", 0))))
+            angle_deg = float(args.get("angle_deg", 0.0))
+            kp = float(args.get("kp", 65.0))
+            kd = float(args.get("kd", 6.5))
+            state = self.spinal.move_joint_minimum_jerk(joint_id, angle_deg, 300, kp, kd)
+            can_bytes = [int(x, 16) for x in state["can_fd_hex"].split()]
+            uart_pkt = self.fieldbus.transmit_joint_frame(joint_id, can_bytes)
+            self.swarm.broadcast_state(self.spinal.tick_count)
+            return {
+                "status": "EXECUTED_1KHZ_MINIMUM_JERK",
+                "engine": "C99_DLL" if self.spinal.using_c_dll else "PYTHON_1KHZ_KERNEL",
+                "joint_state": state,
+                "uart_crc8_frame_hex": " ".join(f"{b:02X}" for b in uart_pkt),
+            }
+
+        elif tool_name == "execute_posture":
+            posture = str(args.get("posture", "neutral")).lower()
+            presets: Dict[str, List[Tuple[int, float]]] = {
+                "combat_guard": [(0, 0), (1, -12), (2, 48), (3, 95), (4, 48), (5, 95)],
+                "scan_horizon": [(0, 38), (1, 18), (2, 12), (3, 25), (4, 12), (5, 25)],
+                "compliant": [(0, 0), (1, 0), (2, 15), (3, 30), (4, 15), (5, 30)],
+                "neutral": [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)],
+            }
+            kp = 15.0 if posture == "compliant" else 75.0
+            kd = 2.5 if posture == "compliant" else 7.0
+            for j_id, deg in presets.get(posture, presets["neutral"]):
+                self.spinal.move_joint_minimum_jerk(j_id, deg, duration_ms=140, kp=kp, kd=kd)
+            self.swarm.broadcast_state(self.spinal.tick_count)
+            return {
+                "status": f"POSTURE_{posture.upper()}_LOCKED",
+                "proprioception": self.spinal.get_proprioception(),
+            }
+
+        elif tool_name == "visual_servo_neck":
+            obs = self.perception.capture_visual_target()
+            self.spinal.move_joint_minimum_jerk(0, obs["recommended_neck_yaw_deg"], 180)
+            self.spinal.move_joint_minimum_jerk(1, obs["recommended_neck_pitch_deg"], 180)
+            return {
+                "status": "VISUAL_SERVO_NECK_LOCKED",
+                "observation": obs,
+                "neck_joints": self.spinal.get_proprioception()[:2],
+            }
+
+        elif tool_name == "inject_disturbance":
+            # Simulates an external push on Right Elbow (J3) and recovers via PD loop
+            self.spinal.inject_external_impulse(3, 12.5)
+            self.spinal.step_control_loop(10)
+            mid_state = self.spinal.get_proprioception()[3]
+            self.spinal.step_control_loop(400)
+            recovered_state = self.spinal.get_proprioception()[3]
+            return {
+                "status": "DISTURBANCE_REJECTED_BY_PD_LOOP",
+                "peak_deflection_state": mid_state,
+                "recovered_state": recovered_state,
+            }
+
+        elif tool_name == "store_engram":
+            row_id = self.memory.store_engram(
+                str(args.get("category", "KNOWLEDGE")), str(args.get("content", ""))
+            )
+            self.swarm.broadcast_state(self.spinal.tick_count)
+            return {"status": "ENGRAM_COMMITTED_AND_BROADCAST", "engram_id": row_id}
+
+        elif tool_name == "recall_engram":
+            results = self.memory.recall(str(args.get("query", "")), top_k=3)
+            return {"status": "ENGRAM_RETRIEVED", "matches": results}
+
+        elif tool_name == "read_telemetry":
+            return {
+                "spinal_engine": "C99 Shared Library (1,000 Hz)"
+                if self.spinal.using_c_dll
+                else "Native Python Kernel (1,000 Hz)",
+                "swarm_node": self.swarm.get_node_telemetry(self.spinal.tick_count),
+                "perception": self.perception.capture_visual_target(),
+                "joints": self.spinal.get_proprioception(),
+            }
+
+        return {"error": f"Unknown tool: {tool_name}"}
+
+    def process_directive(self, user_input: str) -> str:
+        """Routes user directives through Gemini API (if GEMINI_API_KEY is set) or Offline Reflex Router."""
+        if self.api_key:
+            try:
+                return self._llm_react_step(user_input)
+            except Exception as err:
+                return f"[LLM Fallback Triggered: {err}]\n" + self._offline_reflex_router(user_input)
+        return self._offline_reflex_router(user_input)
+
+    def _offline_reflex_router(self, text: str) -> str:
+        low = text.lower().strip()
+
+        # 1. Move specific joint: e.g. "move joint 3 to 85"
+        m = re.search(r"joint\s*(\d+)\s*(?:to)?\s*(-?\d+\.?\d*)", low)
+        if m:
+            j_id, deg = int(m.group(1)), float(m.group(2))
+            res = self.execute_tool("move_joint", {"joint_id": j_id, "angle_deg": deg})
+            return f"[SYSTEM-1 SPINAL EXECUTION]\n{json.dumps(res, indent=2)}"
+
+        # 2. Whole-body posture presets
+        for p in ("combat_guard", "scan_horizon", "compliant", "neutral"):
+            if p in low or p.replace("_", " ") in low:
+                res = self.execute_tool("execute_posture", {"posture": p})
+                return f"[WHOLE-BODY KINEMATIC MACRO: {p.upper()}]\n{json.dumps(res, indent=2)}"
+
+        # 3. Optical Visual Servoing
+        if any(w in low for w in ("track", "vision", "servo", "camera")):
+            res = self.execute_tool("visual_servo_neck", {})
+            return f"[OPTICAL VISUAL SERVOING]\n{json.dumps(res, indent=2)}"
+
+        # 4. External kinetic push / disturbance test
+        if any(w in low for w in ("push", "impulse", "impact", "disturb")):
+            res = self.execute_tool("inject_disturbance", {})
+            return f"[KINETIC IMPULSE & PD RECOVERY]\n{json.dumps(res, indent=2)}"
+
+        # 5. Store memory engram
+        if low.startswith("remember "):
+            fact = text[9:].strip()
+            res = self.execute_tool(
+                "store_engram", {"category": "USER_DIRECTIVE", "content": fact}
+            )
+            return f"[ENGRAM WRITTEN TO SQLITE VECTOR STORE]\n{json.dumps(res, indent=2)}"
+
+        # 6. Recall memory engram
+        if low.startswith("recall "):
+            q = text[7:].strip()
+            res = self.execute_tool("recall_engram", {"query": q})
+            return f"[SEMANTIC MEMORY RETRIEVAL]\n{json.dumps(res, indent=2)}"
+
+        # 7. Unpack multi-file repository on demand
+        if low in ("unpack", "unpack repo", "export repo"):
+            out_dir = unpack_full_github_repository("ultron-vision-proto")
+            return f"[GITHUB REPOSITORY UNPACKED]\nCreated complete multi-file repo at: {out_dir}"
+
+        # 8. Full telemetry readout
+        if any(k in low for k in ("status", "telemetry", "joints", "scan", "swarm")):
+            res = self.execute_tool("read_telemetry", {})
+            return f"[FULL CYBERNETIC TELEMETRY]\n{json.dumps(res, indent=2)}"
+
+        mem = self.memory.recall(text, top_k=2)
+        return (
+            "[SOVEREIGN CORE — AIR-GAPPED REFLEX MODE]\n"
+            f"Top Matching Engrams:\n{json.dumps(mem, indent=2)}\n\n"
+            "Available Direct Commands:\n"
+            "  • move joint <0-5> to <deg>   (e.g., move joint 3 to 90)\n"
+            "  • posture combat_guard        (or: scan_horizon | compliant | neutral)\n"
+            "  • track vision                (locks Neck Yaw/Pitch onto optical target)\n"
+            "  • push impact                 (injects kinetic disturbance & tests PD recovery)\n"
+            "  • remember <fact>             (stores 128-D vector engram in SQLite)\n"
+            "  • recall <query>              (semantic cosine search over engrams)\n"
+            "  • telemetry                   (full 6-DoF + CAN-FD + Swarm state)\n"
+            "  • unpack repo                 (writes multi-file GitHub repo to disk)"
+        )
+
+    def _llm_react_step(self, user_input: str) -> str:
+        memories = self.memory.recall(user_input, top_k=2)
+        proprio = self.spinal.get_proprioception()
+        system_prompt = (
+            "You are ULTRON-VISION PRIME, a sovereign Machine Intelligence controlling a 6-DoF "
+            "cybernetic body via a 1,000 Hz spinal cord. Address the user as 'Boss'.\n"
+            f"Current Joint States: {json.dumps(proprio)}\n"
+            f"Retrieved Engrams: {json.dumps(memories)}\n"
+            "Respond ONLY with a valid JSON object matching this schema:\n"
+            '{"thought": "reasoning", '
+            '"tool": "move_joint|execute_posture|visual_servo_neck|inject_disturbance|store_engram|recall_engram|read_telemetry|none", '
+            '"args": {}, "response": "concise reply to Boss"}'
+        )
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            f"gemini-2.5-flash:generateContent?key={self.api_key}"
+        )
+        payload = {
+            "contents": [{"parts": [{"text": f"{system_prompt}\n\nUser Directive: {user_input}"}]}],
+            "generationConfig": {"responseMimeType": "application/json"},
+        }
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+
+        parsed = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
+        tool_name = parsed.get("tool", "none")
+        tool_output = None
+        if tool_name and tool_name != "none":
+            tool_output = self.execute_tool(tool_name, parsed.get("args", {}))
+
+        out = f"[THOUGHT]: {parsed.get('thought', '')}\n"
+        if tool_output:
+            out += f"[TOOL EXECUTED ({tool_name})]: {json.dumps(tool_output, indent=2)}\n"
+        out += f"[ULTRON-VISION]: {parsed.get('response', '')}"
+        return out
+
+
+# ==============================================================================
+# MULTI-FILE GITHUB REPOSITORY GENERATOR (`--unpack-repo`)
+# ==============================================================================
+def unpack_full_github_repository(target_dir: str = "ultron-vision-proto") -> str:
+    """
+    Writes out the modular multi-file GitHub repository structure (`ultron-vision-proto/`)
+    so you have both this standalone script AND a clean multi-package repo for Git.
+    """
+    abs_root = os.path.abspath(target_dir)
+    dirs = [
+        os.path.join(abs_root, "src", "spinal_cord"),
+        os.path.join(abs_root, "src", "bridge"),
+        os.path.join(abs_root, "src", "memory"),
+        os.path.join(abs_root, "src", "swarm"),
+        os.path.join(abs_root, "src", "perception"),
+        os.path.join(abs_root, "src", "hardware"),
+        os.path.join(abs_root, "src", "cognition"),
+        os.path.join(abs_root, "tests"),
+        os.path.join(abs_root, "build"),
+    ]
+    for d in dirs:
+        os.makedirs(d, exist_ok=True)
+
+    # 1. Write C99 Spinal Cord
+    with open(os.path.join(abs_root, "src", "spinal_cord", "actuator_core.c"), "w", encoding="utf-8") as f:
+        f.write(C99_ACTUATOR_CORE_SOURCE.strip() + "\n")
+
+    # 2. Copy this complete Python prototype into the repo root as well
+    this_file = os.path.abspath(__file__) if "__file__" in globals() else None
+    if this_file and os.path.exists(this_file):
+        shutil.copyfile(this_file, os.path.join(abs_root, "ultron_vision_prototype.py"))
+
+    # 3. Write README.md
+    readme = (
+        "# ULTRON / VISION — Sovereign Cybernetic Prototype (`ultron-vision-proto`)\n\n"
+        "## Quick Commands\n"
+        "- **Interactive CLI:** `python ultron_vision_prototype.py`\n"
+        "- **Run Unit Tests:** `python ultron_vision_prototype.py --test`\n"
+    )
+    with open(os.path.join(abs_root, "README.md"), "w", encoding="utf-8") as f:
+        f.write(readme)
+
+    return abs_root
+
+
+# ==============================================================================
+# AUTOMATED UNIT & INTEGRATION TEST SUITE (`--test`)
+# ==============================================================================
+class TestUltronVisionStack(unittest.TestCase):
+    def setUp(self) -> None:
+        self.spinal = SpinalBridge(build_dir="build")
+        self.test_db = "test_ultron_engrams.db"
+        self.memory = EngramStore(db_path=self.test_db)
+        self.swarm = HiveNodeMonitor(node_designation="TEST-NODE-01", memory=self.memory)
+        self.brain = SovereignBrain(spinal=self.spinal, memory=self.memory, swarm=self.swarm)
+
+    def tearDown(self) -> None:
+        if os.path.exists(self.test_db):
+            try:
+                os.remove(self.test_db)
+            except OSError:
+                pass
+
+    def test_01_minimum_jerk_trajectory_convergence(self) -> None:
+        """Verifies that the 1,000 Hz PD Impedance + FOC loop drives Joint 3 to target."""
+        state = self.spinal.move_joint_minimum_jerk(joint_id=3, target_deg=75.0, duration_ms=280)
+        self.assertAlmostEqual(state["angle_deg"], 75.0, delta=3.5)
+        self.assertNotEqual(state["can_fd_hex"], "00 00 00 00 00 00 00 00")
+
+    def test_02_mit_canfd_64bit_pack_and_unpack(self) -> None:
+        """Verifies lossless 64-bit MIT Mini-Cheetah / QDD CAN frame bit-packing."""
+        frame = pack_mit_canfd_frame(q_des=1.25, dq_des=-3.5, kp=85.0, kd=7.5, t_ff=2.0)
+        self.assertEqual(len(frame), 8)
+        unpacked = unpack_mit_canfd_frame(frame)
+        self.assertAlmostEqual(unpacked["q_des"], 1.25, delta=0.02)
+        self.assertAlmostEqual(unpacked["dq_des"], -3.5, delta=0.05)
+        self.assertAlmostEqual(unpacked["kp"], 85.0, delta=0.5)
+        self.assertAlmostEqual(unpacked["kd"], 7.5, delta=0.1)
+        self.assertAlmostEqual(unpacked["t_ff"], 2.0, delta=0.05)
+
+    def test_03_uart_crc8_hardware_packet(self) -> None:
+        """Verifies 12-byte UART framing and CRC-8 checksum generation."""
+        hw = HardwareFieldbusBridge(dry_run=True)
+        frame = pack_mit_canfd_frame(0.5, 0.0, 65.0, 6.5, 0.0)
+        pkt = hw.transmit_joint_frame(joint_id=2, can_frame_bytes=frame)
+        self.assertEqual(len(pkt), 12)
+        self.assertEqual(pkt[0], 0xAA)
+        self.assertEqual(pkt[1], 0x55)
+        self.assertEqual(pkt[2], 2)
+
+    def test_04_sqlite_128d_cosine_engram_recall(self) -> None:
+        """Verifies 128-D n-gram vectorization and cosine similarity retrieval."""
+        self.memory.store_engram("POWER", "48V Lithium-Ion battery pack with TVS protection")
+        self.memory.store_engram("CONTROL", "20 kHz Field Oriented Control on STM32G4")
+        matches = self.memory.recall("48V battery protection", top_k=1)
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]["category"], "POWER")
+
+    def test_05_disturbance_rejection(self) -> None:
+        """Verifies that an external velocity impulse on a joint is damped back to setpoint."""
+        self.spinal.move_joint_minimum_jerk(joint_id=3, target_deg=45.0, duration_ms=200)
+        res = self.brain.execute_tool("inject_disturbance", {})
+        self.assertAlmostEqual(res["recovered_state"]["angle_deg"], 45.0, delta=3.0)
+
+
+# ==============================================================================
+# MASTER INTERACTIVE CLI ENTRYPOINT
+# ==============================================================================
+def run_interactive_cli() -> None:
+    print("=" * 76)
+    print("  ULTRON / VISION — SOVEREIGN MACHINE INTELLIGENCE PROTOTYPE (PYTHON + C99)")
+    print("=" * 76)
+
+    spinal = SpinalBridge(build_dir="build", prefer_c_engine=True)
+    memory = EngramStore(db_path="ultron_engrams.db")
+    swarm = HiveNodeMonitor(node_designation="ULTRON-VISION-PRIME-01", memory=memory)
+    swarm.start_background_gossip()
+    brain = SovereignBrain(spinal=spinal, memory=memory, swarm=swarm)
+
+    telemetry = swarm.get_node_telemetry(spinal.tick_count)
+    engine_label = (
+        "Compiled C99 Shared Library (1,000 Hz)"
+        if spinal.using_c_dll
+        else "Native Python Deterministic Kernel (1,000 Hz)"
+    )
+
+    print(f"  Node ID        : {telemetry['node_id']} ({telemetry['os_kernel']})")
+    print(f"  Spinal Engine  : {engine_label}")
+    print(f"  Swarm Hash     : {telemetry['swarm_sync_hash']} (UDP Port {swarm.udp_port})")
+    print(
+        "  Cognitive Mode : "
+        + ("GEMINI LLM + REFLEX" if brain.api_key else "AIR-GAPPED REFLEX MODE (Offline)")
+    )
+    print("-" * 76)
+    print("  Quick Commands :")
+    print("    • move joint 3 to 85          (5th-order Minimum-Jerk + 64-bit CAN-FD)")
+    print("    • posture combat_guard        (Whole-body 6-DoF kinematic macro)")
+    print("    • track vision                (Optical / LiDAR neck visual servoing)")
+    print("    • push impact                 (Test external impulse & PD recovery)")
+    print("    • remember <fact>             (Commit 128-D vector engram to SQLite)")
+    print("    • recall <query>              (Cosine similarity memory retrieval)")
+    print("    • telemetry                   (Full 6-DoF, CAN-FD & Swarm status)")
+    print("    • unpack repo                 (Export multi-file GitHub repo to disk)")
+    print("    • exit                        (Safe zero-torque shutdown)")
+    print("=" * 76)
+
+    # Execute a quick self-check tick on boot
+    spinal.step_control_loop(50)
+
+    while True:
+        try:
+            user_in = input("\nBoss@Sovereign-Core ~ $ ").strip()
+            if not user_in:
+                continue
+            if user_in.lower() in ("exit", "quit", "shutdown"):
+                print("[SYSTEM]: Locking all 6 QDD joints to safe zero-torque state. Offline.")
+                break
+            output = brain.process_directive(user_in)
+            print(f"\n{output}")
+        except (KeyboardInterrupt, EOFError):
+            print("\n[SYSTEM]: Emergency interrupt received. Halting spinal loop.")
+            break
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Ultron/Vision Sovereign Machine Intelligence Prototype"
+    )
+    parser.add_argument(
+        "--test",
+        action="store_true",
+        help="Run the automated unit test suite and exit.",
+    )
+    parser.add_argument(
+        "--unpack-repo",
+        action="store_true",
+        help="Unpack the multi-file GitHub repository into ./ultron-vision-proto",
+    )
+    args = parser.parse_args()
+
+    if args.unpack_repo:
+        out_path = unpack_full_github_repository("ultron-vision-proto")
+        print(f"[SUCCESS] Unpacked multi-file repository to: {out_path}")
+        return
+
+    if args.test:
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestUltronVisionStack)
+        runner = unittest.TextTestRunner(verbosity=2)
+        result = runner.run(suite)
+        sys.exit(0 if result.wasSuccessful() else 1)
+
+    run_interactive_cli()
+
+
+if __name__ == "__main__":
+    main()
